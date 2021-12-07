@@ -2,6 +2,7 @@
 #include "mfs.h"
 
 int MFS_Init(char *hostname, int port){
+	printf("init %s on %i\n", hostname, port);
 	return 0;
 }
 
