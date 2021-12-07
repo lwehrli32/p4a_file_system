@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "mfs.h"
 
 #define BUFFER_SIZE (1000)
