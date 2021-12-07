@@ -1,24 +1,34 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include "mfs.h"
 
 int MFS_Init(char *hostname, int port){
-	printf("init %s on %i\n", hostname, port);
+	// TODO: find the host and port
+	
 	return 0;
 }
 
 int MFS_Stat(int inum, MFS_Stat_t *m){
+	// TODO: return info about the file inum, success return 0, -1 otherwise
+	
 	return 0;
 }
 
 int MFS_Write(int inum, char *buffer, int block){
+	// TODO: write block of 4096 bytes offset by block.
+
 	return 0;
 }
 
 int MFS_Read(int inum, char *buffer, int block){
+	// TODO: read the block specified by block into inum
+
 	return 0;
 }
 
 int MFS_Creat(int pinum, int type, char *name){
+	// TODO: 
+	
 	return 0;
 }
 
@@ -27,5 +37,7 @@ int MFS_Unlink(int pinum, char *name){
 }
 
 int MFS_Shutdown(){
-	return 0;
+	// TODO: force all data to the disk
+
+	exit(0);	
 }
