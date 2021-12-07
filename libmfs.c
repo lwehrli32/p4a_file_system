@@ -1,5 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include "mfs.h"
 
 int MFS_Init(char *hostname, int port){

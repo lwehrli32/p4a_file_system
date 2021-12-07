@@ -6,6 +6,9 @@
 
 #define MFS_BLOCK_SIZE   (4096)
 
+#include <stdio.h>
+#include <stdlib.h>
+
 typedef struct __MFS_Stat_t {
 	int type;
 	int size;
