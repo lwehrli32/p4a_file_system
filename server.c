@@ -12,7 +12,8 @@ struct message {
 int main(int argc, char *argv[]) {
     int sd = UDP_Open(10000);
     assert(sd > -1);
-   
+    FILE *fp;
+    fp = fopen("file_system_image.txt","wr");
 	printf("Server:: running\n");
  
 	while (1) {
