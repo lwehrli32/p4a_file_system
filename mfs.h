@@ -19,6 +19,10 @@ typedef struct _MFS_DirEnt_t {
 	int inum;
 } MFS_DirEnt_t;
 
+typedef struct message{
+	int call;
+}message;
+
 int MFS_Init(char *hostname, int port);
 int MFS_Lookup(int pinum, char *name);
 int MFS_Stat(int inum, MFS_Stat_t *m);

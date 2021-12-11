@@ -1,17 +1,17 @@
 #include "mfs.h"
 #include "udp.h"
 
+#define BUFFER_SIZE (1000)
+
 int MFS_Init(char *hostname, int port){
 	struct sockaddr_in addrSnd;	
 
-	int sd = UDP_Open(port);
-	int rc = UDP_FillSockAddr(&addrSnd, hostname, 10000);	
+	int sd = UDP_Open(20000);
+	int rc = UDP_FillSockAddr(&addrSnd, hostname, port);	
 	
 	if (rc < 0){
 		return -1;
 	}
-
-	
 
 	return sd;
 }

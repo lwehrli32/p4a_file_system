@@ -9,6 +9,7 @@ int main(int argc, char *argv[]) {
     assert(sd > -1);
    
 	printf("Server:: running\n");
+	
  
 	while (1) {
 		struct sockaddr_in addr;
