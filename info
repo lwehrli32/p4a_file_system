@@ -1,9 +1,9 @@
 How to compile library:
 
 When you make a change to the library code, run:
-gcc -fPIC -g -c -Wall libmfs.c
-gcc -shared -Wl,-soname,libmfs.so -o libmfs.so libmfs.o -lc
+gcc -fPIC -g -c -Wall libmfs.c udp.c
+gcc -shared -Wl,-soname,libmfs.so -o libmfs.so libmfs.o udp.o -lc
 
 
 If you make a change to a different file, just compile that file. No need to recompile the library code:
-gcc -o main main.c -Wall -L. -lmfs 
+gcc -o client client.c -Wall -L. -lmfs 
