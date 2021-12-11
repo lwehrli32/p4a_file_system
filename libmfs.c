@@ -1,9 +1,18 @@
 #include "mfs.h"
+#include "udp.h"
 
 int MFS_Init(char *hostname, int port){
-	// TODO: find the host and port
+	struct sockaddr_in addrSnd;	
+
+	int sd = UDP_Open(20000);
+	int rc = UDP_FillSockAddr(&addrSnd, hostname, port);	
 	
-	return 0;
+	//TODO delete this
+	if (rc < 0){
+		return -1;
+	}
+
+	return sd;
 }
 
 int MFS_Stat(int inum, MFS_Stat_t *m){
