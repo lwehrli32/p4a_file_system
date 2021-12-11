@@ -21,6 +21,10 @@ typedef struct _MFS_DirEnt_t {
 
 typedef struct message{
 	int call;
+	int inum;
+	char *buffer;
+	int block;
+	int file_or_dir;
 }message;
 
 int MFS_Init(char *hostname, int port);
