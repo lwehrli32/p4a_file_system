@@ -3,6 +3,11 @@
 
 #define BUFFER_SIZE (1000)
 
+struct message {
+
+};
+
+
 // server code
 int main(int argc, char *argv[]) {
     int sd = UDP_Open(10000);
