@@ -5,12 +5,7 @@
 
 // client code
 int main(int argc, char *argv[]) {
-    //struct sockaddr_in addrSnd, addrRcv;
-
-    //int sd = UDP_Open(20000);
-    //int rc = UDP_FillSockAddr(&addrSnd, "localhost", 10000);
-
-	int rc = MFS_Init("localhost", 10000);
+	int rc = MFS_Init("localhost", 20000);
 	
 	if(rc < 0){
 		exit(1);

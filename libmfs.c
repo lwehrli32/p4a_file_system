@@ -4,13 +4,14 @@
 int MFS_Init(char *hostname, int port){
 	struct sockaddr_in addrSnd;	
 
-	int sd = UDP_Open(20000);
-	int rc = UDP_FillSockAddr(&addrSnd, hostname, port);	
+	int sd = UDP_Open(port);
+	int rc = UDP_FillSockAddr(&addrSnd, hostname, 10000);	
 	
-	//TODO delete this
 	if (rc < 0){
 		return -1;
 	}
+
+	
 
 	return sd;
 }
