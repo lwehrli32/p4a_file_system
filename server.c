@@ -15,6 +15,7 @@ int main(int argc, char *argv[]) {
     FILE *fp;
     fp = fopen(argv[1],"wr");
 	printf("Server:: running\n");
+	
  
 	while (1) {
 		struct sockaddr_in addr;
