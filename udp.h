@@ -23,15 +23,19 @@
 #include <netinet/tcp.h>
 #include <netinet/in.h>
 
-//
-// prototypes
-// 
+typedef struct message{
+    int call;
+    int inum;
+    char *buffer;
+    int block;
+    int file_or_dir;
+}message;
 
 int UDP_Open(int port);
 int UDP_Close(int fd);
 
-int UDP_Read(int fd, struct sockaddr_in *addr, char *buffer, int n);
-int UDP_Write(int fd, struct sockaddr_in *addr, char *buffer, int n);
+int UDP_Read(int fd, struct sockaddr_in *addr, struct message *msg, int n);
+int UDP_Write(int fd, struct sockaddr_in *addr, struct message *msg, int n);
 
 int UDP_FillSockAddr(struct sockaddr_in *addr, char *hostName, int port);
 

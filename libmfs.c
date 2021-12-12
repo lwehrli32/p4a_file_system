@@ -1,13 +1,14 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include "mfs.h"
 #include "udp.h"
 
 #define BUFFER_SIZE (1000)
 
 int sd = -1;
+struct sockaddr_in addrSnd, addrRcv;
 
 int MFS_Init(char *hostname, int port){
-	struct sockaddr_in addrSnd;
-
 	sd = UDP_Open(20000);
 	int rc = UDP_FillSockAddr(&addrSnd, hostname, port);	
 	
@@ -32,25 +33,36 @@ int MFS_Write(int inum, char *buffer, int block){
 
 int MFS_Read(int inum, char *buffer, int block){
 	// TODO: read the block specified by block into buffer of file/directory inum
+
+	if (sd == -1){
+		printf("Must call MFS_Init before calling other functions\n");
+	}
 	
-	struct sockaddr_in addrSnd, addrRcv;
-	struct message msg = malloc(sizeof(struct message));
+	struct message *msg = malloc(sizeof(struct message));
+	
 	if (msg == NULL){
 		return -1;
 	}
+
+	msg->inum = inum;
+	msg->buffer = buffer;
+	msg->block = block;
+
+	printf("SD: %i\n", sd);
 	
-	rc = UDP_Write(sd, &addrSnd, msg, BUFFER_SIZE);
+	int rc = UDP_Write(sd, &addrSnd, msg, BUFFER_SIZE);
 	if (rc < 0) {
 		printf("client:: failed to send\n");
 		exit(1);
 	}
 
 	printf("client:: wait for reply...\n");
+		
+	rc = UDP_Read(sd, &addrRcv, msg, BUFFER_SIZE);
 	
-	int rc = UDP_Read(sd, &addrRcv, message, BUFFER_SIZE);
-	//printf("client:: got reply [size:%d contents:(%s)\n", rc, message);	
+	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg->inum);		
 
-	free(msg);	
+	free(msg);
 
 	return 0;
 }

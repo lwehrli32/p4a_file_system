@@ -3,33 +3,42 @@
 
 #define BUFFER_SIZE (1000)
 
-struct message {
-
-};
-
-
-// server code
 int main(int argc, char *argv[]) {
-    int sd = UDP_Open(10000);
+
+	if (argc < 3){
+		printf("Incorrect number of arguments.\n");
+		for (int i = 0; i < argc; i++){
+			printf("argv[%i]: %s\n", i, argv[i]);
+		}		
+		exit(0);
+	}
+    
+	int sd = UDP_Open(atoi(argv[1]));
     assert(sd > -1);
-    FILE *fp;
-    fp = fopen(argv[1],"wr");
+    
+	FILE *fs;
+    fs = fopen(argv[2], "w+");
+
 	printf("Server:: running\n");
 	
- 
 	while (1) {
 		struct sockaddr_in addr;
-		char message[BUFFER_SIZE];
+		struct message *msg = NULL;
+		
 		printf("server:: waiting...\n");
 		
-		int rc = UDP_Read(sd, &addr, message, BUFFER_SIZE);
-		printf("server:: read message [size:%d contents:(%s)]\n", rc, message);
+		int rc = UDP_Read(sd, &addr, msg, BUFFER_SIZE);
+		printf("server:: read message [size:%d contents:(%i)]\n", rc, msg->inum);
+
+		msg->inum = 69;
+
 		if (rc > 0) {
-            char reply[BUFFER_SIZE];
-            sprintf(reply, "goodbye world");
-            rc = UDP_Write(sd, &addr, reply, BUFFER_SIZE);
+            rc = UDP_Write(sd, &addr, msg, BUFFER_SIZE);
 			printf("server:: reply\n");
 		}
     }
+
+	fclose(fs);
+	
     return 0; 
 }
