@@ -38,19 +38,18 @@ int MFS_Read(int inum, char *buffer, int block){
 		printf("Must call MFS_Init before calling other functions\n");
 	}
 	
-	struct message *msg = malloc(sizeof(struct message));
-	
+	struct message *msg = malloc(sizeof(struct message));	
 	if (msg == NULL){
 		return -1;
 	}
 
+	msg->call = 2;
 	msg->inum = inum;
 	msg->buffer = buffer;
 	msg->block = block;
+	msg->file_or_dir = -1;
 
-	printf("SD: %i\n", sd);
-	
-	int rc = UDP_Write(sd, &addrSnd, msg, BUFFER_SIZE);
+	int rc = UDP_Write(sd, &addrSnd, msg, sizeof(struct message));
 	if (rc < 0) {
 		printf("client:: failed to send\n");
 		exit(1);
@@ -58,7 +57,7 @@ int MFS_Read(int inum, char *buffer, int block){
 
 	printf("client:: wait for reply...\n");
 		
-	rc = UDP_Read(sd, &addrRcv, msg, BUFFER_SIZE);
+	rc = UDP_Read(sd, &addrRcv, msg, sizeof(struct message));
 	
 	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg->inum);		
 

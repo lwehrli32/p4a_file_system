@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include "udp.h"
 
-#define BUFFER_SIZE (1000)
-
 int main(int argc, char *argv[]) {
 
 	if (argc < 3){
@@ -23,19 +21,27 @@ int main(int argc, char *argv[]) {
 	
 	while (1) {
 		struct sockaddr_in addr;
-		struct message *msg = NULL;
+		struct message *msg = malloc(sizeof(struct message));
+		if (msg == NULL){
+			printf("cannot allocate\n");
+			exit(1);	
+		}
 		
 		printf("server:: waiting...\n");
 		
-		int rc = UDP_Read(sd, &addr, msg, BUFFER_SIZE);
-		printf("server:: read message [size:%d contents:(%i)]\n", rc, msg->inum);
+		int rc = UDP_Read(sd, &addr, msg, sizeof(struct message));
+		printf("server:: read message [size:%d] msg->inum: %i\n", rc, msg->inum);
 
+		//printf("server:: inum: %i\n", msg->inum);		
+	
 		msg->inum = 69;
 
 		if (rc > 0) {
-            rc = UDP_Write(sd, &addr, msg, BUFFER_SIZE);
+            rc = UDP_Write(sd, &addr, msg, sizeof(struct message));
 			printf("server:: reply\n");
 		}
+
+		free(msg);
     }
 
 	fclose(fs);
