@@ -1,6 +1,16 @@
 #include <stdio.h>
 #include "udp.h"
 
+int mfs_read(int inum, char *buffer, int block){
+    printf("server:: mfs_read\n");
+	return 1;
+}
+
+int mfs_create(int pinum, int type, char *name){
+	printf("server:: mfs_create\n");
+	return 1;
+}
+
 int main(int argc, char *argv[]) {
 
 	if (argc < 3){
@@ -32,9 +42,13 @@ int main(int argc, char *argv[]) {
 		int rc = UDP_Read(sd, &addr, msg, sizeof(struct message));
 		printf("server:: read message [size:%d] msg->inum: %i\n", rc, msg->inum);
 
-		//printf("server:: inum: %i\n", msg->inum);		
-	
-		msg->inum = 69;
+		int call = msg->call;
+
+		if (call == 2){
+			mfs_read(msg->inum, msg->buffer, msg->block);
+		}else if(call == 3){
+			mfs_create(msg->pinum, msg->file_or_dir, msg->name);
+		}
 
 		if (rc > 0) {
             rc = UDP_Write(sd, &addr, msg, sizeof(struct message));

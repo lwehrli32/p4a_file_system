@@ -26,7 +26,9 @@
 typedef struct message{
     int call;
     int inum;
+	int pinum;
     char *buffer;
+	char *name;
     int block;
     int file_or_dir;
 }message;

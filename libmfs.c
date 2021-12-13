@@ -47,6 +47,7 @@ int MFS_Read(int inum, char *buffer, int block){
 	msg->inum = inum;
 	msg->buffer = buffer;
 	msg->block = block;
+	msg->pinum = -1;
 	msg->file_or_dir = -1;
 
 	int rc = UDP_Write(sd, &addrSnd, msg, sizeof(struct message));
@@ -68,6 +69,37 @@ int MFS_Read(int inum, char *buffer, int block){
 
 int MFS_Creat(int pinum, int type, char *name){
 	// TODO: makes a file (type == MFS_REGULAR_FILE) or directory (type == MFS_DIRECTORY) in the parent directory specified by pinum of name name. Returns 0 on success
+	
+	if (sd == -1){
+		printf("Must call MFS_Init before calling other functions\n");
+	}
+
+	struct message *msg = malloc(sizeof(struct message));
+	if (msg == NULL){
+		return -1;
+	}	
+
+	msg->call = 3;
+	msg->pinum = pinum;
+	msg->inum = -1;
+	msg->name = name;
+	msg->buffer = NULL;
+	msg->block = -1;
+	msg->file_or_dir = type;
+
+	int rc = UDP_Write(sd, &addrSnd, msg, sizeof(struct message));
+	if (rc < 0) {
+		printf("client:: failed to send\n");
+		exit(1);
+	}
+
+	printf("client:: wait for reply...\n");
+
+	rc = UDP_Read(sd, &addrRcv, msg, sizeof(struct message));
+
+	printf("client:: got reply [size:%d)\n", rc);
+
+	free(msg);
 	
 	return 0;
 }
