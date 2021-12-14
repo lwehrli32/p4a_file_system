@@ -23,6 +23,8 @@
 #include <netinet/tcp.h>
 #include <netinet/in.h>
 
+//#include "mfs.h"
+
 typedef struct message{
     int call;
     int inum;
@@ -31,6 +33,8 @@ typedef struct message{
 	char *name;
     int block;
     int file_or_dir;
+	struct MFS_Stat_t *stat;
+	struct MFS_DirEnt_t *dirEnt;
 }message;
 
 int UDP_Open(int port);

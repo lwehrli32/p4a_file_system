@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "mfs.h"
 #include "udp.h"
-
-#define BUFFER_SIZE (1000)
+#include "mfs.h"
 
 int sd = -1;
 struct sockaddr_in addrSnd, addrRcv;
@@ -27,6 +25,36 @@ int MFS_Stat(int inum, MFS_Stat_t *m){
 
 int MFS_Write(int inum, char *buffer, int block){
 	// TODO: write block of 4096 bytes offset by block.
+
+	if (sd == -1){
+    printf("Must call MFS_Init before calling other functions\n");
+}
+
+struct message *msg = malloc(sizeof(struct message));
+if (msg == NULL){
+    return -1;
+}
+
+msg->call = 2;
+msg->inum = inum;
+msg->buffer = buffer;
+msg->block = block;
+msg->pinum = -1;
+msg->file_or_dir = -1;
+
+int rc = UDP_Write(sd, &addrSnd, msg, sizeof(struct message));
+if (rc < 0) {
+    printf("client:: failed to send\n");
+    exit(1);
+}
+
+printf("client:: wait for reply...\n");
+
+rc = UDP_Read(sd, &addrRcv, msg, sizeof(struct message));
+
+printf("client:: got reply [size:%d contents:(%i)\n", rc, msg->inum);
+
+	free(msg);
 
 	return 0;
 }
