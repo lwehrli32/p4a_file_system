@@ -20,6 +20,43 @@ int MFS_Init(char *hostname, int port){
 int MFS_Stat(int inum, MFS_Stat_t *m){
 	// TODO: return info about the file inum, success return 0, -1 otherwise
 	
+	if (sd == -1){
+		printf("Must call MFS_Init before calling other functions\n");
+	}
+
+	struct message *msg = malloc(sizeof(struct message));
+	if (msg == NULL){
+		return -1;
+	}
+
+	msg->call = 0;
+	msg->inum = inum;
+	msg->buffer = NULL;
+	msg->block = -1;
+	msg->pinum = -1;
+	msg->file_or_dir = -1;
+	msg->stat =(struct MFS_Stat_t *) m;
+	msg->dirEnt = NULL;
+
+	int rc = UDP_Write(sd, &addrSnd, msg, sizeof(struct message));
+	if (rc < 0) {
+		printf("client:: failed to send\n");
+		free(msg);
+		return -1;
+	}
+
+	printf("client:: wait for reply...\n");
+
+	rc = UDP_Read(sd, &addrRcv, msg, sizeof(struct message));
+
+	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg->inum);
+
+	free(msg);
+
+	if (rc < 0){
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -27,34 +64,41 @@ int MFS_Write(int inum, char *buffer, int block){
 	// TODO: write block of 4096 bytes offset by block.
 
 	if (sd == -1){
-    printf("Must call MFS_Init before calling other functions\n");
-}
+		printf("Must call MFS_Init before calling other functions\n");
+	}
 
-struct message *msg = malloc(sizeof(struct message));
-if (msg == NULL){
-    return -1;
-}
+	struct message *msg = malloc(sizeof(struct message));
+	if (msg == NULL){
+		return -1;
+	}
 
-msg->call = 2;
-msg->inum = inum;
-msg->buffer = buffer;
-msg->block = block;
-msg->pinum = -1;
-msg->file_or_dir = -1;
+	msg->call = 1;
+	msg->inum = inum;
+	msg->buffer = buffer;
+	msg->block = block;
+	msg->pinum = -1;
+	msg->file_or_dir = -1;
+	msg->stat = NULL;
+	msg->dirEnt = NULL;
 
-int rc = UDP_Write(sd, &addrSnd, msg, sizeof(struct message));
-if (rc < 0) {
-    printf("client:: failed to send\n");
-    exit(1);
-}
+	int rc = UDP_Write(sd, &addrSnd, msg, sizeof(struct message));
+	if (rc < 0) {
+		printf("client:: failed to send\n");
+		free(msg);
+		return -1;
+	}
 
-printf("client:: wait for reply...\n");
+	printf("client:: wait for reply...\n");
 
-rc = UDP_Read(sd, &addrRcv, msg, sizeof(struct message));
+	rc = UDP_Read(sd, &addrRcv, msg, sizeof(struct message));
 
-printf("client:: got reply [size:%d contents:(%i)\n", rc, msg->inum);
+	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg->inum);
 
 	free(msg);
+
+	if (rc < 0){
+		return -1;
+	}
 
 	return 0;
 }
@@ -77,11 +121,14 @@ int MFS_Read(int inum, char *buffer, int block){
 	msg->block = block;
 	msg->pinum = -1;
 	msg->file_or_dir = -1;
+	msg->stat = NULL;
+	msg->dirEnt = NULL;
 
 	int rc = UDP_Write(sd, &addrSnd, msg, sizeof(struct message));
 	if (rc < 0) {
 		printf("client:: failed to send\n");
-		exit(1);
+		free(msg);
+		return -1;
 	}
 
 	printf("client:: wait for reply...\n");
@@ -91,6 +138,9 @@ int MFS_Read(int inum, char *buffer, int block){
 	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg->inum);		
 
 	free(msg);
+
+	if (rc < 0)
+		return -1;
 
 	return 0;
 }
@@ -114,11 +164,14 @@ int MFS_Creat(int pinum, int type, char *name){
 	msg->buffer = NULL;
 	msg->block = -1;
 	msg->file_or_dir = type;
+	msg->stat = NULL;
+	msg->dirEnt = NULL;
 
 	int rc = UDP_Write(sd, &addrSnd, msg, sizeof(struct message));
 	if (rc < 0) {
 		printf("client:: failed to send\n");
-		exit(1);
+		free(msg);
+		return -1;
 	}
 
 	printf("client:: wait for reply...\n");
@@ -128,18 +181,94 @@ int MFS_Creat(int pinum, int type, char *name){
 	printf("client:: got reply [size:%d)\n", rc);
 
 	free(msg);
+
+	if (rc < 0)
+		return -1;
 	
 	return 0;
 }
 
 int MFS_Unlink(int pinum, char *name){
 	// TODO: removes the file or directory name from the directory specified by pinum. 0 on success, -1 on failure.
+	
+	if (sd == -1){
+		printf("Must call MFS_Init before calling other functions\n");
+	}
 
+	struct message *msg = malloc(sizeof(struct message));
+	if (msg == NULL){
+		return -1;
+	}
+
+	msg->call = 4;
+	msg->pinum = pinum;
+	msg->inum = -1;
+	msg->name = name;
+	msg->buffer = NULL;
+	msg->block = -1;
+	msg->file_or_dir = -1;
+	msg->stat = NULL;
+	msg->dirEnt = NULL;
+
+	int rc = UDP_Write(sd, &addrSnd, msg, sizeof(struct message));
+	if (rc < 0) {
+		printf("client:: failed to send\n");
+		free(msg);
+		return -1;
+	}
+
+	printf("client:: wait for reply...\n");
+
+	rc = UDP_Read(sd, &addrRcv, msg, sizeof(struct message));
+
+	printf("client:: got reply [size:%d)\n", rc);
+
+	free(msg);
+
+	if (rc < 0)
+		return -1;
 	return 0;
 }
 
 int MFS_Shutdown(){
 	// TODO: force all data to the disk
+	
+	if (sd == -1){
+		printf("Must call MFS_Init before calling other functions\n");
+	}
+
+	struct message *msg = malloc(sizeof(struct message));
+	if (msg == NULL){
+		return -1;
+	}
+
+	msg->call = 5;
+	msg->pinum = -1;
+	msg->inum = -1;
+	msg->name = NULL;
+	msg->buffer = NULL;
+	msg->block = -1;
+	msg->file_or_dir = -1;
+	msg->stat = NULL;
+	msg->dirEnt = NULL;
+	
+	int rc = UDP_Write(sd, &addrSnd, msg, sizeof(struct message));
+	if (rc < 0) {
+		printf("client:: failed to send\n");
+		free(msg);
+		return -1;
+	}
+
+	printf("client:: wait for reply...\n");
+
+	rc = UDP_Read(sd, &addrRcv, msg, sizeof(struct message));
+
+	printf("client:: got reply [size:%d)\n", rc);
+
+	free(msg);
+
+	if (rc < 0)
+		return -1;
 
 	exit(0);	
 }
