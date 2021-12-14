@@ -17,11 +17,10 @@ int MFS_Init(char *hostname, int port){
 	return sd;
 }
 
-int MFS_Stat(int inum, MFS_Stat_t *m){
-	// TODO: return info about the file inum, success return 0, -1 otherwise
-	
+int MFS_Lookup(int pinum, char *name){
 	if (sd == -1){
 		printf("Must call MFS_Init before calling other functions\n");
+		return -1;
 	}
 
 	struct message *msg = malloc(sizeof(struct message));
@@ -30,12 +29,58 @@ int MFS_Stat(int inum, MFS_Stat_t *m){
 	}
 
 	msg->call = 0;
+	msg->inum = -1;
+	msg->buffer = NULL;
+	msg->block = -1;
+	msg->pinum = pinum;
+	msg->name = name;
+	msg->file_or_dir = -1;
+	msg->stat = NULL;
+	msg->dirEnt = NULL;
+
+	int rc = UDP_Write(sd, &addrSnd, msg, sizeof(struct message));
+	if (rc < 0) {
+		printf("client:: failed to send\n");
+		free(msg);
+		return -1;
+	}
+
+	printf("client:: wait for reply...\n");
+
+	rc = UDP_Read(sd, &addrRcv, msg, sizeof(struct message));
+
+	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg->inum);
+	
+	free(msg);
+
+	if (rc < 0){
+		return -1;
+	}
+
+	return 0;
+}
+
+int MFS_Stat(int inum, MFS_Stat_t *m){
+	// TODO: return info about the file inum, success return 0, -1 otherwise
+	
+	if (sd == -1){
+		printf("Must call MFS_Init before calling other functions\n");
+		return -1;
+	}
+
+	struct message *msg = malloc(sizeof(struct message));
+	if (msg == NULL){
+		return -1;
+	}
+
+	msg->call = 1;
 	msg->inum = inum;
 	msg->buffer = NULL;
 	msg->block = -1;
+	msg->name = NULL;
 	msg->pinum = -1;
 	msg->file_or_dir = -1;
-	msg->stat =(struct MFS_Stat_t *) m;
+	msg->stat = (struct MFS_Stat_t *) m;
 	msg->dirEnt = NULL;
 
 	int rc = UDP_Write(sd, &addrSnd, msg, sizeof(struct message));
@@ -65,6 +110,7 @@ int MFS_Write(int inum, char *buffer, int block){
 
 	if (sd == -1){
 		printf("Must call MFS_Init before calling other functions\n");
+		return -1;
 	}
 
 	struct message *msg = malloc(sizeof(struct message));
@@ -72,10 +118,11 @@ int MFS_Write(int inum, char *buffer, int block){
 		return -1;
 	}
 
-	msg->call = 1;
+	msg->call = 2;
 	msg->inum = inum;
 	msg->buffer = buffer;
 	msg->block = block;
+	msg->name = NULL;
 	msg->pinum = -1;
 	msg->file_or_dir = -1;
 	msg->stat = NULL;
@@ -108,6 +155,7 @@ int MFS_Read(int inum, char *buffer, int block){
 
 	if (sd == -1){
 		printf("Must call MFS_Init before calling other functions\n");
+		return -1;
 	}
 	
 	struct message *msg = malloc(sizeof(struct message));	
@@ -115,11 +163,12 @@ int MFS_Read(int inum, char *buffer, int block){
 		return -1;
 	}
 
-	msg->call = 2;
+	msg->call = 3;
 	msg->inum = inum;
 	msg->buffer = buffer;
 	msg->block = block;
 	msg->pinum = -1;
+	msg->name = NULL;
 	msg->file_or_dir = -1;
 	msg->stat = NULL;
 	msg->dirEnt = NULL;
@@ -150,6 +199,7 @@ int MFS_Creat(int pinum, int type, char *name){
 	
 	if (sd == -1){
 		printf("Must call MFS_Init before calling other functions\n");
+		return -1;
 	}
 
 	struct message *msg = malloc(sizeof(struct message));
@@ -157,7 +207,7 @@ int MFS_Creat(int pinum, int type, char *name){
 		return -1;
 	}	
 
-	msg->call = 3;
+	msg->call = 4;
 	msg->pinum = pinum;
 	msg->inum = -1;
 	msg->name = name;
@@ -193,6 +243,7 @@ int MFS_Unlink(int pinum, char *name){
 	
 	if (sd == -1){
 		printf("Must call MFS_Init before calling other functions\n");
+		return -1;
 	}
 
 	struct message *msg = malloc(sizeof(struct message));
@@ -200,7 +251,7 @@ int MFS_Unlink(int pinum, char *name){
 		return -1;
 	}
 
-	msg->call = 4;
+	msg->call = 5;
 	msg->pinum = pinum;
 	msg->inum = -1;
 	msg->name = name;
@@ -235,6 +286,7 @@ int MFS_Shutdown(){
 	
 	if (sd == -1){
 		printf("Must call MFS_Init before calling other functions\n");
+		return -1;
 	}
 
 	struct message *msg = malloc(sizeof(struct message));
@@ -242,7 +294,7 @@ int MFS_Shutdown(){
 		return -1;
 	}
 
-	msg->call = 5;
+	msg->call = 6;
 	msg->pinum = -1;
 	msg->inum = -1;
 	msg->name = NULL;
