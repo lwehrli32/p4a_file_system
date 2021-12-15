@@ -1,45 +1,78 @@
 #include <stdio.h>
 #include "udp.h"
+#include "mfs.h"
 
-int mfs_lookup(int pinum, char *name){
+typedef struct inode{
+	
+}inode;
+
+int *imap;
+int imap_size;
+
+int add_inode_imap(){
+	imap_size++;
+	int *temp = realloc(imap, imap_size * sizeof(int));
+	
+	if(temp == NULL){
+		return 0;
+	}
+	imap = temp;
+	*(imap + imap_size) = 0;
+	return 1;
+}
+
+int init_fs(FILE *fs){
+    // TODO: read in fs to array
+    printf("server:: reading file system to memory...\n");
+
+    imap_size = 1;
+    imap = malloc(sizeof(int));
+	
+	    
+
+    return 0;
+}
+
+int s_mfs_lookup(int pinum, char *name, FILE *fs){
 	//TODO
 	printf("server:: mfs_lookup\n");
 	return 1;
 }
 
-int mfs_stat(int inum, MFS_Stat_t *m){
+int s_mfs_stat(int inum, struct MFS_Stat_t *m, FILE *fs){
 	//TODO
 	printf("server:: mfs_stat\n");
 	return 1;
 }
 
-int mfs_creat(int pinum, int type, char *name){
+int s_mfs_write(int inum, char *buffer, int block, FILE *fs){
 	//TODO
-	printf("server:: mfs_creat\n");
+	printf("server:: mfs_write\n");
 	return 1;
 }
 
-int mfs_unlink(int pinum, char *name){
+int s_mfs_unlink(int pinum, char *name, FILE *fs){
 	//TODO
 	printf("server:: mfs_unlink\n");
 	return 1;
 }
 
-int mfs_read(int inum, char *buffer, int block){
+int s_mfs_read(int inum, char *buffer, int block, FILE *fs){
 	//TODO
     printf("server:: mfs_read\n");
 	return 1;
 }
 
-int mfs_create(int pinum, int type, char *name){
+int s_mfs_create(int pinum, int type, char *name, FILE *fs){
 	//TODO
 	printf("server:: mfs_create\n");
 	return 1;
 }
 
-int mfs_shutdown(){
+int s_mfs_shutdown(FILE *fs){
 	//TODO: force everything to the disk and exit
 	printf("server:: mfs_shutdown\n");
+	free(imap);
 	return 1;
 }
 
@@ -59,7 +92,14 @@ int main(int argc, char *argv[]) {
 	FILE *fs;
     fs = fopen(argv[2], "w+");
 
-	printf("Server:: running\n");
+	int init_rc = init_fs(fs);
+
+	if (init_rc < 0){
+		printf("Could not get server running\n");
+		exit(0);
+	}
+
+	printf("server:: up and running\n");
 	
 	while (1) {
 		struct sockaddr_in addr;
@@ -77,19 +117,19 @@ int main(int argc, char *argv[]) {
 		int call = msg->call;
 
 		if(call == 0){
-			//TODO	
+			s_mfs_lookup(msg->pinum, msg->name, fs);
 		}else if (call == 1){
-			//TODO
+			s_mfs_stat(msg->inum, msg->stat, fs);
 		}else if (call == 2){
-			mfs_read(msg->inum, msg->buffer, msg->block);
+			s_mfs_write(msg->inum, msg->buffer, msg->block, fs);
 		}else if(call == 3){
-			mfs_create(msg->pinum, msg->file_or_dir, msg->name);
+			s_mfs_read(msg->inum, msg->buffer, msg->block, fs);		
 		}else if (call == 4){
-			//TODO
+			s_mfs_create(msg->pinum, msg->file_or_dir, msg->name, fs);
 		}else if (call == 5){
-			//TODO
+			s_mfs_unlink(msg->pinum, msg->name, fs);		
 		}else if (call == 6){
-			//TODO
+			s_mfs_shutdown(fs);
 		}
 
 		if (rc > 0) {

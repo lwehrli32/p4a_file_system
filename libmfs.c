@@ -152,7 +152,7 @@ int MFS_Write(int inum, char *buffer, int block){
 
 int MFS_Read(int inum, char *buffer, int block){
 	// TODO: read the block specified by block into buffer of file/directory inum
-
+	printf("client:: MFS_READ\n");
 	if (sd == -1){
 		printf("Must call MFS_Init before calling other functions\n");
 		return -1;

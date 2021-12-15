@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "mfs.h"
 
@@ -19,6 +20,13 @@ int main(int argc, char *argv[]) {
 	printf("Before mfs_read call. inum: %i\n", 1);
 	
 	rc = MFS_Read(1, message, 0);
+	
+	printf("client:: waiting...\n");
+	sleep(4);
+
+
+	printf("client:: before shutdown\n");	
+	rc = MFS_Shutdown();
 
     //printf("client:: send message [%i]\n", );
     //rc = UDP_Write(sd, &addrSnd, message, BUFFER_SIZE);
