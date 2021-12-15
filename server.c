@@ -39,7 +39,7 @@ int s_mfs_lookup(int pinum, char *name, FILE *fs){
 	return 1;
 }
 
-int s_mfs_stat(int inum, struct MFS_Stat_t *m, FILE *fs){
+int s_mfs_stat(int inum, int stat_type, int stat_size, FILE *fs){
 	//TODO
 	printf("server:: mfs_stat\n");
 	return 1;
@@ -111,29 +111,41 @@ int main(int argc, char *argv[]) {
 		
 		printf("server:: waiting...\n");
 		
-		int rc = UDP_Read(sd, &addr, msg, sizeof(struct message));
-		printf("server:: read message [size:%d] msg->inum: %i\n", rc, msg->inum);
-
-		int call = msg->call;
+		int rc = UDP_Read(sd, &addr, (char *)&msg, sizeof(struct message));
+		printf("server:: got read\n");
+	
+		struct message *msgs = (struct message *) &msg;
+		
+		printf("server:: after cast\n");	
+		printf("server:: read message [size:%d] call: %i\n", rc, msgs->call);
+		printf("server:: after print\n");	
+		
+		// error here - is not an int
+		int call = msgs->call;
+		
+		printf("server:: before work\n");
 
 		if(call == 0){
 			s_mfs_lookup(msg->pinum, msg->name, fs);
 		}else if (call == 1){
-			s_mfs_stat(msg->inum, msg->stat, fs);
+			s_mfs_stat(msg->inum, msg->type, msg->size, fs);
 		}else if (call == 2){
 			s_mfs_write(msg->inum, msg->buffer, msg->block, fs);
 		}else if(call == 3){
 			s_mfs_read(msg->inum, msg->buffer, msg->block, fs);		
 		}else if (call == 4){
-			s_mfs_create(msg->pinum, msg->file_or_dir, msg->name, fs);
+			s_mfs_create(msg->pinum, msg->type, msg->name, fs);
 		}else if (call == 5){
 			s_mfs_unlink(msg->pinum, msg->name, fs);		
 		}else if (call == 6){
 			s_mfs_shutdown(fs);
 		}
+		
+		printf("server:: after work\n");
 
 		if (rc > 0) {
-            rc = UDP_Write(sd, &addr, msg, sizeof(struct message));
+			printf("server:: before call\n");
+            rc = UDP_Write(sd, &addr, (char *)&msg, sizeof(struct message));
 			printf("server:: reply\n");
 		}
 

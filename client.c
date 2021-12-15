@@ -8,7 +8,7 @@
 
 // client code
 int main(int argc, char *argv[]) {
-	int rc = MFS_Init("localhost", 10000);
+	int rc = MFS_Init("localhost", 30000);
 	
 	if(rc < 0){
 		exit(1);
