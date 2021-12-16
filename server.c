@@ -3,7 +3,9 @@
 #include "mfs.h"
 
 typedef struct inode{
-	
+	int size;
+	int type;
+	int block[14];
 }inode;
 
 int *imap;
@@ -22,13 +24,15 @@ int add_inode_imap(){
 }
 
 int init_fs(FILE *fs){
-    // TODO: read in fs to array
     printf("server:: reading file system to memory...\n");
 
-    imap_size = 1;
-    imap = malloc(sizeof(int));
+    imap_size = 2;
+    imap = malloc(imap_size * sizeof(int));
 	
-	    
+	// TODO read in existing fs first
+
+	// set checkpoint region. set it to the last inode
+	*(imap) = 0;
 
     return 0;
 }
