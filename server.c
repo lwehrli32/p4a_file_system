@@ -2,10 +2,15 @@
 #include "udp.h"
 #include "mfs.h"
 
+typedef struct block{
+	char *data;
+}block;
+
+
 typedef struct inode{
 	int size; // number of last byte in file
 	int type; // file or dir
-	char *block[14]; // point to data
+	struct block *data[14]; // point to data
 }inode;
 
 
@@ -170,6 +175,7 @@ int s_mfs_create(int pinum, int type, char *name){
 		return -1;
 	}
 
+	// create new inode number
 	struct inode *new_inode = malloc(sizeof(struct inode));
 	if (new_inode == NULL){
 		return -1;
@@ -178,7 +184,7 @@ int s_mfs_create(int pinum, int type, char *name){
 	new_inode->type = type;
 
 	// get inode index from imap using checkpoint region
-	//int pinode = *(imap + pinum);
+	int pinode = *(imap + pinum);
 	
 	
 
