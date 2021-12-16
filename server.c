@@ -3,6 +3,7 @@
 #include "mfs.h"
 
 typedef struct block{
+	char *name; // not sure, for unlink
 	char *data;
 }block;
 
@@ -11,6 +12,10 @@ typedef struct inode{
 	int type; // file or dir
 	struct block *data[14]; // point to data
 }inode;
+
+struct directory {
+	char *name; // not sure, for unlink
+}
 
 
 int *imap;
@@ -134,6 +139,13 @@ int s_mfs_write(int inum, char *buffer, int block){
 int s_mfs_unlink(int pinum, char *name){
 	//TODO
 	printf("server:: mfs_unlink\n");
+	int inode = *(imap + pinum);
+	struct inode node = *(inode + inode);
+	if (node.type == MFS_DIRECTORY) {
+		
+	} else {
+		return -1;
+	}
 	return 0;
 }
 
