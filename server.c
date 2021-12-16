@@ -3,9 +3,9 @@
 #include "mfs.h"
 
 typedef struct inode{
-	int size;
-	int type;
-	int block[14];
+	int size; // number of last byte in file
+	int type; // file or dir
+	int block[14]; // point to data
 }inode;
 
 int *imap;
