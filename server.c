@@ -106,17 +106,25 @@ int s_mfs_read(int inum, char *buffer, int block){
 	// get inode
 	struct inode node = *(inodes + inode);
 
+	if (node == NULL){
+		return -1;
+	}
+
 	if (node.type == 0){
 		// directory
 
-		struct MFS_DirEnt_t *dir = malloc(sizeof(struct MFS_DirEnt_t *));
-		
+		MFS_DirEnt_t *dir = malloc(sizeof(MFS_DirEnt_t));
+		if (dir == NULL){
+			return -1;
+		}
+
+		// TODO get dir name
 		strcpy(dir->name, "dir_name");
-		dir->inum = -1;
+		dir->inum = inum;
 
 		// get data
 		strcpy(buffer, (char *)dir);
-		
+
 		free(dir);
 	}else{
 		// file
