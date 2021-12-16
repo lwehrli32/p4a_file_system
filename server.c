@@ -64,36 +64,45 @@ int init_fs(FILE *fs){
     return 0;
 }
 
-int s_mfs_lookup(int pinum, char *name, FILE *fs){
+int s_mfs_lookup(int pinum, char *name){
 	//TODO
 	printf("server:: mfs_lookup\n");
-	return 1;
+	return 0;
 }
 
-int s_mfs_stat(int inum, int stat_type, int stat_size, FILE *fs){
+int s_mfs_stat(int inum, int stat_type, int stat_size){
 	//TODO
 	printf("server:: mfs_stat\n");
-	return 1;
+	return 0;
 }
 
-int s_mfs_write(int inum, char *buffer, int block, FILE *fs){
+int s_mfs_write(int inum, char *buffer, int block){
 	//TODO
 	printf("server:: mfs_write\n");
 	
 	// look at imap using checkpoint
-	//int inode = *(imap + check_point);
+	int inode = *(imap + check_point);
 	
 	// look at inode
-	//struct inode node = NULL;
-	// look 
+	struct inode node = *(inodes + inode);
+	
+	// look at the data
+	if (node.type == 0){
+		return -1;
+	}
 
-	return 1;
+	if (block > 16 || block < 2)
+		return -1;
+
+	node.block[block - 2] = buffer;
+
+	return 0;
 }
 
-int s_mfs_unlink(int pinum, char *name, FILE *fs){
+int s_mfs_unlink(int pinum, char *name){
 	//TODO
 	printf("server:: mfs_unlink\n");
-	return 1;
+	return 0;
 }
 
 int s_mfs_read(int inum, char *buffer, int block){
@@ -105,10 +114,6 @@ int s_mfs_read(int inum, char *buffer, int block){
 	
 	// get inode
 	struct inode node = *(inodes + inode);
-
-	if (node == NULL){
-		return -1;
-	}
 
 	if (node.type == 0){
 		// directory
@@ -133,21 +138,21 @@ int s_mfs_read(int inum, char *buffer, int block){
 		strcpy(buffer, node.block[block]);
 	} 
 	
-	return 1;
+	return 0;
 }
 
-int s_mfs_create(int pinum, int type, char *name, FILE *fs){
+int s_mfs_create(int pinum, int type, char *name){
 	//TODO
 	printf("server:: mfs_create\n");
-	return 1;
+	return 0;
 }
 
 int s_mfs_shutdown(FILE *fs){
-	//TODO: force everything to the disk and exit
+	//TODO: force everything to the fs and exit
 	printf("server:: mfs_shutdown\n");
 	free(inodes);
 	free(imap);
-	return 1;
+	return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -200,17 +205,17 @@ int main(int argc, char *argv[]) {
 		printf("server:: before work\n");
 
 		if(call == 0){
-			s_mfs_lookup(msg->pinum, msg->name, fs);
+			s_mfs_lookup(msg->pinum, msg->name);
 		}else if (call == 1){
-			s_mfs_stat(msg->inum, msg->type, msg->size, fs);
+			s_mfs_stat(msg->inum, msg->type, msg->size);
 		}else if (call == 2){
-			s_mfs_write(msg->inum, msg->buffer, msg->block, fs);
+			s_mfs_write(msg->inum, msg->buffer, msg->block);
 		}else if(call == 3){
 			s_mfs_read(msg->inum, msg->buffer, msg->block);		
 		}else if (call == 4){
-			s_mfs_create(msg->pinum, msg->type, msg->name, fs);
+			s_mfs_create(msg->pinum, msg->type, msg->name);
 		}else if (call == 5){
-			s_mfs_unlink(msg->pinum, msg->name, fs);		
+			s_mfs_unlink(msg->pinum, msg->name);		
 		}else if (call == 6){
 			s_mfs_shutdown(fs);
 		}
