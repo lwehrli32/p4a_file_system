@@ -41,17 +41,22 @@ int add_inode_imap(){
 	return 0;
 }
 
-int init_fs(FILE *fs){
+int init_fs(char fname[]){
     printf("server:: reading file system to memory...\n");
+    
+    FILE *fs;
+    fs = fopen(fname, "w+");
 
     imap_size = 1;
     imap = malloc(imap_size * sizeof(int));
 	if (imap == NULL){
+		fclose(fs);
 		return -1;
 	}
 	
 	inodes = malloc(imap_size * sizeof(struct inode));
 	if (inodes == NULL){
+		fclose(fs);
 		return -1;
 	}
 	
@@ -65,6 +70,8 @@ int init_fs(FILE *fs){
 	}else{
 		check_point = 0;
 	}
+	
+	fclose(fs);
 
     return 0;
 }
@@ -192,9 +199,47 @@ int s_mfs_create(int pinum, int type, char *name){
 	return 0;
 }
 
-int s_mfs_shutdown(FILE *fs){
-	//TODO: force everything to the fs and exit
+int s_mfs_shutdown(char fname[]){
+	//TODO: force everything to the fs and exit	
 	printf("server:: mfs_shutdown\n");
+	
+	FILE *fs;
+    fs = fopen(fname, "w+");
+	
+	// print checkpoint region
+	fprintf(fs, "%i,%i\n", check_point, imap_size);
+	
+	// print imap
+	for(int i = 0; i < imap_size; i++){
+		if (i == imap_size - 1){
+			fprintf(fs, "%i", *(imap + i));
+		}else{
+			fprintf(fs, "%i,", *(imap + i));
+		}
+	}
+	
+	fprintf(fs, "\n");
+	
+	// print inodes
+	for (int i = 0; i < imap_size; i++){
+		printf("server:: getting inode %i\n", i);
+		struct inode node = *(inodes + i);
+		fprintf(fs, "%i,", node.size);
+		fprintf(fs, "%i,", node.type);
+
+		for(int jj = 0; jj < 14; jj++){
+			if (node.data[i] != NULL){
+				fprintf(fs, "%s,", node.data[i]->data);
+			}else{
+				break;
+			}
+		}
+		fprintf(fs, "*&*&*");
+	}
+	
+	fprintf(fs, "\n");
+	
+	fclose(fs);
 	free(inodes);
 	free(imap);
 	return 0;
@@ -212,11 +257,8 @@ int main(int argc, char *argv[]) {
     
 	int sd = UDP_Open(atoi(argv[1]));
     assert(sd > -1);
-    
-	FILE *fs;
-    fs = fopen(argv[2], "w+");
 
-	int init_rc = init_fs(fs);
+	int init_rc = init_fs(argv[2]);
 
 	if (init_rc < 0){
 		printf("Could not get server running\n");
@@ -258,7 +300,7 @@ int main(int argc, char *argv[]) {
 		}else if (call == 5){
 			msg.call = s_mfs_unlink(msg.pinum, msg.name);		
 		}else if(call == 6){
-			msg.call = s_mfs_shutdown(fs);
+			msg.call = s_mfs_shutdown(argv[2]);
 		}
 		
 		printf("server:: after work\n");
@@ -270,8 +312,6 @@ int main(int argc, char *argv[]) {
 		}
 		
     }
-
-	fclose(fs);
 	
     return 0; 
 }
