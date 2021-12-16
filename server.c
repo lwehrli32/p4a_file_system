@@ -119,7 +119,7 @@ int s_mfs_write(int inum, char *buffer, int block){
 	if (block > 16 || block < 2)
 		return -1;
 
-	node.block[block - 2] = buffer;
+	node.data[block - 2]->data = buffer;
 
 	return 0;
 }
@@ -160,7 +160,7 @@ int s_mfs_read(int inum, char *buffer, int block){
 		// file
 		
 		// get data
-		strcpy(buffer, node.block[block]);
+		strcpy(buffer, node.data[block]->data);
 	} 
 	
 	return 0;
