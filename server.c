@@ -73,10 +73,9 @@ int init_fs(FILE *fs){
 *
 */
 int s_mfs_lookup(int pinum, char *name){
-	//TODO
 	printf("server:: mfs_lookup\n");
 	int inode = *(pinum + imap);
-	inode node = *(inode + inodes);
+	struct inode node = *(inode + inodes);
 	if (node.type == MFS_DIRECTORY) {
 		
 	} else {
