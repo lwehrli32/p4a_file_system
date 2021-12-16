@@ -8,6 +8,7 @@ typedef struct inode{
 	char *block[14]; // point to data
 }inode;
 
+
 int *imap;
 int imap_size;
 struct inode *inodes;
@@ -70,9 +71,16 @@ int s_mfs_lookup(int pinum, char *name){
 	return 0;
 }
 
-int s_mfs_stat(int inum, int stat_type, int stat_size){
+int s_mfs_stat(int inum, MFS_Stat_t *m){
 	//TODO
 	printf("server:: mfs_stat\n");
+	int inode = *(imap + inum);
+	inode node = *(inodes + inode);
+	if (node.type == MFS_DIRECTORY) {
+		
+	} else if (node.type == MFS_REGULAR_FILE) {
+		// wait for piazza
+	}
 	return 0;
 }
 
