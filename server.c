@@ -65,10 +65,24 @@ int init_fs(FILE *fs){
     return 0;
 }
 
+/*
+*  takes the parent inode number (which should be the inode number of a directory) 
+*  and looks up the entry name in it. The inode number of name is returned. 
+*	Success: return inode number of name; failure: return -1. 
+*	Failure modes: invalid pinum, name does not exist in pinum.
+*
+*/
 int s_mfs_lookup(int pinum, char *name){
 	//TODO
 	printf("server:: mfs_lookup\n");
-	return 0;
+	int inode = *(pinum + imap);
+	inode node = *(inode + inodes);
+	if (node.type == MFS_DIRECTORY) {
+		
+	} else {
+		return -1;
+	}
+ 	return 0;
 }
 
 int s_mfs_stat(int inum, int type, int size){
@@ -95,7 +109,7 @@ int s_mfs_write(int inum, char *buffer, int block){
 	struct inode node = *(inodes + inode);
 	
 	// look at the data
-	if (node.type == 0){
+	if (node.type == MFS_DIRECTORY){
 		return -1;
 	}
 
