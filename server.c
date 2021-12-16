@@ -183,7 +183,7 @@ int s_mfs_create(int pinum, int type, char *name){
 	new_inode->type = type;
 
 	// get inode index from imap using checkpoint region
-	int pinode = *(imap + pinum);
+	//int pinode = *(imap + pinum);
 	
 	
 
@@ -227,42 +227,38 @@ int main(int argc, char *argv[]) {
 	
 	while (1) {
 		struct sockaddr_in addr;
-		struct message *msg = malloc(sizeof(struct message));
-		if (msg == NULL){
-			printf("cannot allocate\n");
-			exit(1);	
-		}
+		struct message msg;
 		
 		printf("server:: waiting...\n");
 		
 		int rc = UDP_Read(sd, &addr, (char *)&msg, sizeof(struct message));
 		printf("server:: got read\n");
 	
-		struct message *msgs = (struct message *) &msg;
+		msg = (struct message) msg;
 		
 		printf("server:: after cast\n");	
-		printf("server:: read message [size:%d] call: %i\n", rc, msgs->call);
+		printf("server:: read message [size:%d] call: %i\n", rc, msg.call);
 		printf("server:: after print\n");	
 		
 		// error here - is not an int
-		int call = msgs->call;
+		int call = msg.call;
 		
 		printf("server:: before work\n");
 
 		if(call == 0){
-			s_mfs_lookup(msg->pinum, msg->name);
+			msg.call = s_mfs_lookup(msg.pinum, msg.name);
 		}else if (call == 1){
-			s_mfs_stat(msg->inum, msg->type, msg->size);
+			msg.call = s_mfs_stat(msg.inum, msg.type, msg.size);
 		}else if (call == 2){
-			s_mfs_write(msg->inum, msg->buffer, msg->block);
+			msg.call = s_mfs_write(msg.inum, msg.buffer, msg.block);
 		}else if(call == 3){
-			s_mfs_read(msg->inum, msg->buffer, msg->block);		
+			msg.call = s_mfs_read(msg.inum, msg.buffer, msg.block);		
 		}else if (call == 4){
-			s_mfs_create(msg->pinum, msg->type, msg->name);
+			msg.call = s_mfs_create(msg.pinum, msg.type, msg.name);
 		}else if (call == 5){
-			s_mfs_unlink(msg->pinum, msg->name);		
-		}else if (call == 6){
-			s_mfs_shutdown(fs);
+			msg.call = s_mfs_unlink(msg.pinum, msg.name);		
+		}else if(call == 6){
+			msg.call = s_mfs_shutdown(fs);
 		}
 		
 		printf("server:: after work\n");
@@ -272,8 +268,7 @@ int main(int argc, char *argv[]) {
             rc = UDP_Write(sd, &addr, (char *)&msg, sizeof(struct message));
 			printf("server:: reply\n");
 		}
-
-		free(msg);
+		
     }
 
 	fclose(fs);

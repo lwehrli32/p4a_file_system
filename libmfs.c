@@ -7,7 +7,7 @@ int sd = -1;
 struct sockaddr_in addrSnd, addrRcv;
 
 int MFS_Init(char *hostname, int port){
-	sd = UDP_Open(20000);
+	sd = UDP_Open(45000);
 	int rc = UDP_FillSockAddr(&addrSnd, hostname, port);	
 	
 	if (rc < 0){
@@ -37,6 +37,8 @@ int MFS_Lookup(int pinum, char *name){
 	printf("client:: wait for reply...\n");
 
 	rc = UDP_Read(sd, &addrRcv, (char *)&msg, sizeof(struct message));
+	
+	msg = (struct message) msg;
 
 	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg.inum);
 	
@@ -70,6 +72,8 @@ int MFS_Stat(int inum, MFS_Stat_t *m){
 	printf("client:: wait for reply...\n");
 
 	rc = UDP_Read(sd, &addrRcv, (char *)&msg, sizeof(struct message));
+	
+	msg = (struct message) msg;
 
 	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg.call);
 
@@ -103,6 +107,8 @@ int MFS_Write(int inum, char *buffer, int block){
 	printf("client:: wait for reply...\n");
 
 	rc = UDP_Read(sd, &addrRcv, (char *)&msg, sizeof(struct message));
+	
+	msg = (struct message) msg;
 
 	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg.call);
 
@@ -138,6 +144,8 @@ int MFS_Read(int inum, char *buffer, int block){
 		
 	rc = UDP_Read(sd, &addrRcv, (char *)&msg, sizeof(struct message));
 	
+	msg = (struct message) msg;
+	
 	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg.call);		
 
 	if (rc < 0)
@@ -170,6 +178,8 @@ int MFS_Creat(int pinum, int type, char *name){
 
 	rc = UDP_Read(sd, &addrRcv, (char *)&msg, sizeof(struct message));
 
+	msg = (struct message) msg;
+
 	printf("client:: got reply [size:%d)\n", rc);
 
 	if (rc < 0)
@@ -200,6 +210,8 @@ int MFS_Unlink(int pinum, char *name){
 	printf("client:: wait for reply...\n");
 
 	rc = UDP_Read(sd, &addrRcv, (char *)&msg, sizeof(struct message));
+	
+	msg = (struct message) msg;
 
 	printf("client:: got reply [size:%d)\n", rc);
 
@@ -228,8 +240,10 @@ int MFS_Shutdown(){
 	printf("client:: wait for reply...\n");
 
 	rc = UDP_Read(sd, &addrRcv, (char *)&msg, sizeof(struct message));
+	
+	msg = (struct message) msg;
 
-	printf("client:: got reply [size:%d)\n", rc);
+	printf("client:: got reply from shutdown: rc: %i\n", msg.call);
 
 	if (rc < 0)
 		return -1;

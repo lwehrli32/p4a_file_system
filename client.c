@@ -16,12 +16,12 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 	
-    char *message = strdup("Hello");
+    //char *message = strdup("Hello");
     //sprintf(message, "hello world");
 	
 	printf("Before mfs_read call. inum: %i\n", 1);
 	
-	rc = MFS_Read(1, message, 0);
+	//rc = MFS_Read(1, message, 0);
 	
 	printf("client:: waiting...\n");
 	sleep(4);
