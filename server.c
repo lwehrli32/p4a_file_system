@@ -6,7 +6,6 @@ typedef struct block{
 	char *data;
 }block;
 
-
 typedef struct inode{
 	int size; // number of last byte in file
 	int type; // file or dir
