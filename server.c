@@ -10,29 +10,56 @@ typedef struct inode{
 
 int *imap;
 int imap_size;
+struct inode *inodes;
+int check_point;
 
 int add_inode_imap(){
 	imap_size++;
+	
+	// add new inode to imap
 	int *temp = realloc(imap, imap_size * sizeof(int));
 	
 	if(temp == NULL){
-		return 0;
+		return -1;
 	}
+	
 	imap = temp;
 	*(imap + imap_size) = 0;
-	return 1;
+
+	// add inode to inodes array
+	struct inode *tempI = realloc(inodes, imap_size * sizeof(struct inode));
+	if (tempI == NULL){
+		return -1;
+	}
+
+	inodes = tempI;
+	return 0;
 }
 
 int init_fs(FILE *fs){
     printf("server:: reading file system to memory...\n");
 
-    imap_size = 2;
+    imap_size = 1;
     imap = malloc(imap_size * sizeof(int));
+	if (imap == NULL){
+		return -1;
+	}
+	
+	inodes = malloc(imap_size * sizeof(struct inode));
+	if (inodes == NULL){
+		return -1;
+	}
 	
 	// TODO read in existing fs first
-
+	int readFS = 0;
+	
 	// set checkpoint region. set it to the last inode
-	*(imap) = 0;
+	if (readFS){
+		// TODO set checkpoint of actual fs
+		check_point = 0;
+	}else{
+		check_point = 0;
+	}
 
     return 0;
 }
@@ -52,6 +79,14 @@ int s_mfs_stat(int inum, int stat_type, int stat_size, FILE *fs){
 int s_mfs_write(int inum, char *buffer, int block, FILE *fs){
 	//TODO
 	printf("server:: mfs_write\n");
+	
+	// look at imap using checkpoint
+	int inode = *(imap + check_point);
+	
+	// look at inode
+	struct inode node = inodes 
+	// look 
+
 	return 1;
 }
 
@@ -64,6 +99,16 @@ int s_mfs_unlink(int pinum, char *name, FILE *fs){
 int s_mfs_read(int inum, char *buffer, int block, FILE *fs){
 	//TODO
     printf("server:: mfs_read\n");
+
+	// get checkpoint region
+	
+	// get imap
+
+	// get inode
+
+	// get data
+
+	
 	return 1;
 }
 
@@ -76,6 +121,7 @@ int s_mfs_create(int pinum, int type, char *name, FILE *fs){
 int s_mfs_shutdown(FILE *fs){
 	//TODO: force everything to the disk and exit
 	printf("server:: mfs_shutdown\n");
+	free(inodes);
 	free(imap);
 	return 1;
 }
