@@ -23,19 +23,14 @@ int MFS_Lookup(int pinum, char *name){
 		return -1;
 	}
 
-	struct message *msg = malloc(sizeof(struct message));
-	if (msg == NULL){
-		return -1;
-	}
-
-	msg->call = 0;
-	msg->pinum = pinum;
-	strcpy(msg->name, name);
+	struct message msg;
+	msg.call = 0;
+	msg.pinum = pinum;
+	strcpy(msg.name, name);
 
 	int rc = UDP_Write(sd, &addrSnd, (char *)&msg, sizeof(struct message));
 	if (rc < 0) {
 		printf("client:: failed to send\n");
-		free(msg);
 		return -1;
 	}
 
@@ -43,10 +38,8 @@ int MFS_Lookup(int pinum, char *name){
 
 	rc = UDP_Read(sd, &addrRcv, (char *)&msg, sizeof(struct message));
 
-	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg->inum);
+	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg.inum);
 	
-	free(msg);
-
 	if (rc < 0){
 		return -1;
 	}
@@ -62,20 +55,15 @@ int MFS_Stat(int inum, MFS_Stat_t *m){
 		return -1;
 	}
 
-	struct message *msg = malloc(sizeof(struct message));
-	if (msg == NULL){
-		return -1;
-	}
-
-	msg->call = 1;
-	msg->inum = inum;
-	msg->type = m->type;
-	msg->size = m->size;
+	struct message msg;
+	msg.call = 1;
+	msg.inum = inum;
+	msg.type = m->type;
+	msg.size = m->size;
 
 	int rc = UDP_Write(sd, &addrSnd, (char *)&msg, sizeof(struct message));
 	if (rc < 0) {
 		printf("client:: failed to send\n");
-		free(msg);
 		return -1;
 	}
 
@@ -83,9 +71,7 @@ int MFS_Stat(int inum, MFS_Stat_t *m){
 
 	rc = UDP_Read(sd, &addrRcv, (char *)&msg, sizeof(struct message));
 
-	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg->inum);
-
-	free(msg);
+	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg.call);
 
 	if (rc < 0){
 		return -1;
@@ -102,20 +88,15 @@ int MFS_Write(int inum, char *buffer, int block){
 		return -1;
 	}
 
-	struct message *msg = malloc(sizeof(struct message));
-	if (msg == NULL){
-		return -1;
-	}
-
-	msg->call = 2;
-	msg->inum = inum;
-	strcpy(msg->buffer, buffer);
-	msg->block = block;
+	struct message msg;
+	msg.call = 2;
+	msg.inum = inum;
+	strcpy(msg.buffer, buffer);
+	msg.block = block;
 
 	int rc = UDP_Write(sd, &addrSnd, (char *)&msg, sizeof(struct message));
 	if (rc < 0) {
 		printf("client:: failed to send\n");
-		free(msg);
 		return -1;
 	}
 
@@ -123,9 +104,7 @@ int MFS_Write(int inum, char *buffer, int block){
 
 	rc = UDP_Read(sd, &addrRcv, (char *)&msg, sizeof(struct message));
 
-	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg->inum);
-
-	free(msg);
+	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg.call);
 
 	if (rc < 0){
 		return -1;
@@ -142,20 +121,16 @@ int MFS_Read(int inum, char *buffer, int block){
 		return -1;
 	}
 	
-	struct message *msg = malloc(sizeof(struct message));	
-	if (msg == NULL){
-		return -1;
-	}
+	struct message msg;	
 
-	msg->call = 3;
-	msg->inum = inum;
-	strcpy(msg->buffer, buffer);
-	msg->block = block;
+	msg.call = 3;
+	msg.inum = inum;
+	strcpy(msg.buffer, buffer);
+	msg.block = block;
 
 	int rc = UDP_Write(sd, &addrSnd, (char *)&msg, sizeof(struct message));
 	if (rc < 0) {
 		printf("client:: failed to send\n");
-		free(msg);
 		return -1;
 	}
 
@@ -163,9 +138,7 @@ int MFS_Read(int inum, char *buffer, int block){
 		
 	rc = UDP_Read(sd, &addrRcv, (char *)&msg, sizeof(struct message));
 	
-	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg->inum);		
-
-	free(msg);
+	printf("client:: got reply [size:%d contents:(%i)\n", rc, msg.call);		
 
 	if (rc < 0)
 		return -1;
@@ -181,20 +154,15 @@ int MFS_Creat(int pinum, int type, char *name){
 		return -1;
 	}
 
-	struct message *msg = malloc(sizeof(struct message));
-	if (msg == NULL){
-		return -1;
-	}	
-
-	msg->call = 4;
-	msg->pinum = pinum;
-	strcpy(msg->name, name);
-	msg->type = type;
+	struct message msg;
+	msg.call = 4;
+	msg.pinum = pinum;
+	strcpy(msg.name, name);
+	msg.type = type;
 
 	int rc = UDP_Write(sd, &addrSnd, (char *)&msg, sizeof(struct message));
 	if (rc < 0) {
 		printf("client:: failed to send\n");
-		free(msg);
 		return -1;
 	}
 
@@ -203,8 +171,6 @@ int MFS_Creat(int pinum, int type, char *name){
 	rc = UDP_Read(sd, &addrRcv, (char *)&msg, sizeof(struct message));
 
 	printf("client:: got reply [size:%d)\n", rc);
-
-	free(msg);
 
 	if (rc < 0)
 		return -1;
@@ -220,19 +186,14 @@ int MFS_Unlink(int pinum, char *name){
 		return -1;
 	}
 
-	struct message *msg = malloc(sizeof(struct message));
-	if (msg == NULL){
-		return -1;
-	}
-
-	msg->call = 5;
-	msg->pinum = pinum;
-	strcpy(msg->name, name);
+	struct message msg;
+	msg.call = 5;
+	msg.pinum = pinum;
+	strcpy(msg.name, name);
 
 	int rc = UDP_Write(sd, &addrSnd, (char *)&msg, sizeof(struct message));
 	if (rc < 0) {
 		printf("client:: failed to send\n");
-		free(msg);
 		return -1;
 	}
 
@@ -241,8 +202,6 @@ int MFS_Unlink(int pinum, char *name){
 	rc = UDP_Read(sd, &addrRcv, (char *)&msg, sizeof(struct message));
 
 	printf("client:: got reply [size:%d)\n", rc);
-
-	free(msg);
 
 	if (rc < 0)
 		return -1;
@@ -257,17 +216,12 @@ int MFS_Shutdown(){
 		return -1;
 	}
 
-	struct message *msg = malloc(sizeof(struct message));
-	if (msg == NULL){
-		return -1;
-	}
-
-	msg->call = 6;
+	struct message msg;
+	msg.call = 6;
 	
 	int rc = UDP_Write(sd, &addrSnd, (char *)&msg, sizeof(struct message));
 	if (rc < 0) {
 		printf("client:: failed to send\n");
-		free(msg);
 		return -1;
 	}
 
@@ -276,8 +230,6 @@ int MFS_Shutdown(){
 	rc = UDP_Read(sd, &addrRcv, (char *)&msg, sizeof(struct message));
 
 	printf("client:: got reply [size:%d)\n", rc);
-
-	free(msg);
 
 	if (rc < 0)
 		return -1;

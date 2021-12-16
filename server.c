@@ -71,16 +71,16 @@ int s_mfs_lookup(int pinum, char *name){
 	return 0;
 }
 
-int s_mfs_stat(int inum, MFS_Stat_t *m){
+int s_mfs_stat(int inum, int type, int size){
 	//TODO
 	printf("server:: mfs_stat\n");
-	int inode = *(imap + inum);
-	inode node = *(inodes + inode);
-	if (node.type == MFS_DIRECTORY) {
+	//int inode = *(imap + inum);
+	//struct inode node = *(inodes + inode);
+	//if (node.type == MFS_DIRECTORY) {
 		
-	} else if (node.type == MFS_REGULAR_FILE) {
+	//} else if (node.type == MFS_REGULAR_FILE) {
 		// wait for piazza
-	}
+	//}
 	return 0;
 }
 
@@ -152,6 +152,25 @@ int s_mfs_read(int inum, char *buffer, int block){
 int s_mfs_create(int pinum, int type, char *name){
 	//TODO
 	printf("server:: mfs_create\n");
+	
+	if(add_inode_imap() < 0){
+		return -1;
+	}
+
+	struct inode *new_inode = malloc(sizeof(struct inode));
+	if (new_inode == NULL){
+		return -1;
+	}
+
+	new_inode->type = type;
+
+	// get inode index from imap using checkpoint region
+	//int pinode = *(imap + pinum);
+	
+	
+
+	// update checkpoint region
+	
 	return 0;
 }
 

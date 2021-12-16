@@ -8,6 +8,8 @@
 
 // client code
 int main(int argc, char *argv[]) {
+	printf("start of client\n");
+
 	int rc = MFS_Init("localhost", 30000);
 	
 	if(rc < 0){
