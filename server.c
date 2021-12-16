@@ -5,7 +5,7 @@
 typedef struct inode{
 	int size; // number of last byte in file
 	int type; // file or dir
-	int block[14]; // point to data
+	char *block[14]; // point to data
 }inode;
 
 int *imap;
@@ -81,10 +81,10 @@ int s_mfs_write(int inum, char *buffer, int block, FILE *fs){
 	printf("server:: mfs_write\n");
 	
 	// look at imap using checkpoint
-	int inode = *(imap + check_point);
+	//int inode = *(imap + check_point);
 	
 	// look at inode
-	struct inode node = inodes 
+	//struct inode node = NULL;
 	// look 
 
 	return 1;
@@ -96,18 +96,18 @@ int s_mfs_unlink(int pinum, char *name, FILE *fs){
 	return 1;
 }
 
-int s_mfs_read(int inum, char *buffer, int block, FILE *fs){
+int s_mfs_read(int inum, char *buffer, int block){
 	//TODO
     printf("server:: mfs_read\n");
 
-	// get checkpoint region
+	// get inode index from imap using checkpoint region
+	int inode = *(imap + inum);
 	
-	// get imap
-
 	// get inode
-
+	struct inode node = *(inodes + inode);
+	
 	// get data
-
+	strcpy(buffer, node.block[block]);
 	
 	return 1;
 }
@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
 		}else if (call == 2){
 			s_mfs_write(msg->inum, msg->buffer, msg->block, fs);
 		}else if(call == 3){
-			s_mfs_read(msg->inum, msg->buffer, msg->block, fs);		
+			s_mfs_read(msg->inum, msg->buffer, msg->block);		
 		}else if (call == 4){
 			s_mfs_create(msg->pinum, msg->type, msg->name, fs);
 		}else if (call == 5){
