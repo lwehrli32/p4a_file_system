@@ -147,7 +147,7 @@ int s_mfs_write(int inum, char *buffer, int block, char fname[]){
 	}
 
 	int imap_num  = checkpoint->imap[inum];
-	if (imap_num ==0);
+	if (imap_num ==0) {
 		return -1;
 	}
 
