@@ -84,11 +84,29 @@ int s_mfs_lookup(int pinum, char *name){
 	} else return -1;
  	return 0;
 }
-
+// returns some information about the file specified by inum. 
+// Upon success, return 0, otherwise -1. The exact info returned 
+// is defined by MFS_Stat_t. Failure modes: inum does not exist.
+// size is defined by MFS_BLOCK_SIZE * #blocks
+// Method Definition was originally:
+// int MFS_Stat(int inum, MFS_Stat_t *m)
 int s_mfs_stat(int inum, int type, int size){
 	//TODO
 	printf("server:: mfs_stat\n");
-	
+	FILE *fs = fopen(fname, "r");
+	if (fs == NULL) return -1;
+	int imap_num = checkpoint->imap[pinum];
+	if (imap_num == NULL) return -1;
+	Inode *inode = get_inode(imap_num, fs);
+	if (inode == NULL) return -1;
+	// For server.c
+	// MFS_Stat_t *stat = NULL; 
+	// stat->type = inode->type;
+	// stat->size = MFS_BLOCK_SIZE * inode->size; 
+	type = inode->type;
+	size = inode->size;
+	//return stat;
+	// Cannot currently return any information
 	return 0;
 }
 
@@ -133,17 +151,30 @@ int s_mfs_write(int inum, char *buffer, int block, char fname[]){
 	fclose(fs);
 	return 0;
 }
-
+// removes the file or directory name from the directory specified by pinum. 
+// 0 on success, -1 on failure. Failure modes: pinum does not exist, 
+// directory is NOT empty. Note that the name not existing is NOT a failure 
+//by our definition (think about why this might be).
 int s_mfs_unlink(int pinum, char *name){
 	//TODO
 	printf("server:: mfs_unlink\n");
+	FILE *fs = fopen(fname, "r+");
+	if (fs == NULL) return -1;
+	int imap_num = checkpoint->imap[pinum];
+	if (imap_num == NULL) return -1;
+	Inode *inode = get_inode(imap_num, fs);
+	if (inode == NULL) return -1;
+	if (inode == MFS_REGULAR_FILE) {
 
+	} else if (inode == MFS_DIRECTORY) {
+
+	}
 	return 0;
 }
 
 int s_mfs_read(int inum, char *buffer, int block, char fname[]){
     printf("server:: mfs_read\n");
-	
+	s
 	FILE *fs = fopen(fname, "r");
 	if (fs == NULL){
 		return -1;
