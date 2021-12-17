@@ -126,7 +126,7 @@ int s_mfs_stat(int inum, int type, int size, char fname[]){
 	printf("server:: mfs_stat\n");
 	FILE *fs = fopen(fname, "r");
 	if (fs == NULL) return -1;
-	int imap_num = checkpoint->imap[i];
+	int imap_num = checkpoint->imap[inum];
 	if (imap_num == 0) return -1;
 	Inode *inode = get_inode(imap_num, fs);
 	if (inode == NULL) return -1;
@@ -146,7 +146,7 @@ int s_mfs_write(int inum, char *buffer, int block, char fname[]){
 	}
 
 	int imap_num  = checkpoint->imap[inum];
-	if (imap_num ==0);
+	if (imap_num ==0) {
 		return -1;
 	}
 
@@ -289,7 +289,7 @@ int get_empty_offset_imap(){
 
 int get_empty_offset(Inode *inode){
 	for(int i = 0; i < 14; i++){
-		if (inode->data_offset[i] == 0)){
+		if (inode->data_offset[i] == 0){
 			return i;
 		}
 	}
