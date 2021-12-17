@@ -290,7 +290,7 @@ int get_empty_offset_imap(){
 
 int get_empty_offset(Inode *inode){
 	for(int i = 0; i < 14; i++){
-		if (inode->data_offset[i] == 0)){
+		if (inode->data_offset[i] == 0){
 			return i;
 		}
 	}
