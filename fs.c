@@ -16,7 +16,7 @@ typedef struct Inode{
 }Inode;
 
 typedef struct Checkpoint {
-	int file_size;
+	size_t file_size;
 	int imap[256]; // This points to the inodes
 } Checkpoint;
 
@@ -28,45 +28,48 @@ Inode * get_inode(int offset, FILE *fs);
 Block * get_data(int offset, FILE *fs);
 int get_empty_offset(Inode *inode);
 int get_empty_offset_imap();
+size_t size;
 
 int init_fs(char fname[]){
     printf("server:: reading file system to memory...\n");
     
-    FILE *fs = fopen(fname, "r");
-    checkpoint = (struct Checkpoint*) checkBuffer;
+    size = sizeof(MFS_BLOCK_SIZE);
+    
+    FILE *fs = fopen(fname, "rb");
 	if (fs == NULL){
-		fs = fopen(fname, "w");
+		fs = fopen(fname, "wb");
 		Inode inode;
 		inode.type = MFS_DIRECTORY;
 		
-		checkpoint = malloc(sizeof(MFS_BLOCK_SIZE));
+		checkpoint = malloc(size);
 		if (checkpoint == NULL) return -1;
 		
 		// first inode
-		checkpoint->imap[0] = sizeof(MFS_BLOCK_SIZE);
+		checkpoint->imap[0] = size;
 		
 		MFS_DirEnt_t pdir;
 		strcpy(pdir.name, "..");
 		pdir.inum = 0;
 		
 		// from the inode to the pdir
-		inode.data_offset[0] = sizeof(MFS_BLOCK_SIZE);
-		
-		
+		inode.data_offset[0] = size;
+		strcpy(inode.name, "test");
 		MFS_DirEnt_t dir;
 		strcpy(dir.name, ".");
 		dir.inum = 1;
-		inode.data_offset[1] = 2 * sizeof(MFS_BLOCK_SIZE);
+		inode.data_offset[1] = 2 * size;
 		
-		fwrite(&checkpoint, sizeof(MFS_BLOCK_SIZE), 1, fs);
-		fwrite(&inode, sizeof(MFS_BLOCK_SIZE), 1, fs);
-		fwrite(&pdir, sizeof(MFS_BLOCK_SIZE), 1, fs);
-		fwrite(&dir, sizeof(MFS_BLOCK_SIZE), 1, fs);
+		checkpoint->file_size = 4 * size;
+		
+		fwrite(&checkpoint, size, 1, fs);
+		fwrite(&inode, size, 1, fs);
+		fwrite(&pdir, size, 1, fs);
+		fwrite(&dir, size, 1, fs);
 		
 		fclose(fs);
 	}else{
 		//existing fs
-		int checkpoint_size = sizeof(MFS_BLOCK_SIZE);
+		int checkpoint_size = size;
 		int count = 0;
 		char ch;
 		char checkBuffer[checkpoint_size];
@@ -77,8 +80,13 @@ int init_fs(char fname[]){
 		checkpoint = (struct Checkpoint*) checkBuffer;
 
 		fclose(fs);
+		
+		Inode *node = get_inode(checkpoint->imap[0], fs);
+		printf("inode name: %s\n", node->name);
+		
+		printf("checkpoint: %li\n", checkpoint->file_size);
 
-		total_size = sizeof(MFS_BLOCK_SIZE) + sizeof(MFS_BLOCK_SIZE);
+		total_size = 2 * size;
 
 		write_buffer = malloc(total_size);
 	}
