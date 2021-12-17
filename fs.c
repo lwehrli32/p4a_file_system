@@ -127,7 +127,7 @@ int s_mfs_stat(int inum, int type, int size, char fname[]){
 	printf("server:: mfs_stat\n");
 	FILE *fs = fopen(fname, "r");
 	if (fs == NULL) return -1;
-	int imap_num = checkpoint->imap[pinum];
+	int imap_num = checkpoint->imap[inum];
 	if (imap_num == 0) return -1;
 	Inode *inode = get_inode(imap_num, fs);
 	if (inode == NULL) return -1;
