@@ -33,20 +33,36 @@ int init_fs(char fname[]){
     printf("server:: reading file system to memory...\n");
     
     FILE *fs = fopen(fname, "r");
+    checkpoint = (struct Checkpoint*) checkBuffer;
 	if (fs == NULL){
 		fs = fopen(fname, "w");
+		Inode inode;
+		inode.type = MFS_DIRECTORY;
+		
+		checkpoint = malloc(sizeof(Checkpoint));
+		if (checkpoint == NULL) return -1;
+		
+		// first inode
+		 nn 
+		
+		
 		MFS_DirEnt_t pdir;
 		strcpy(pdir.name, "..");
-		pdir.inum = pinum;
+		pdir.inum = 0;
 		
+		// from the inode to the pdir
+		inode.data_offset[0] = sizeof(MFS_BLOCK_SIZE);
 		
-		write(fs, &checkpoint, sizeof(Checkpoint));
-		write(fs, &pdir, sizeof(MFS_DirEnt_t));
 		
 		MFS_DirEnt_t dir;
 		strcpy(dir.name, ".");
-		dir.inum = get_empty_offset_imap();
-		write(fs, &dir, sizeof(MFS_DirEnt_t));
+		dir.inum = 1;
+		inode.data_offset[1] = 2 * sizeof(MFS_BLOCK_SIZE);
+		
+		write(fs, &checkpoint, sizeof(MFS_BLOCK_SIZE));
+		write(fs, &inode, sizeof(MFS_BLOCK_SIZE));
+		write(fs, &pdir, sizeof(MFS_BLOCK_SIZE));
+		write(fs, &dir, sizeof(MFS_BLOCK_SIZE));
 		
 		fclose(fs);
 	}else{
