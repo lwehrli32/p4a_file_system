@@ -106,13 +106,13 @@ int s_mfs_lookup(int pinum, char *name, char fname[]){
 // size is defined by MFS_BLOCK_SIZE * #blocks
 // Method Definition was originally:
 // int MFS_Stat(int inum, MFS_Stat_t *m)
-int s_mfs_stat(int inum, int type, int size){
+int s_mfs_stat(int inum, int type, int size, char fname[]){
 	//TODO
 	printf("server:: mfs_stat\n");
 	FILE *fs = fopen(fname, "r");
 	if (fs == NULL) return -1;
 	int imap_num = checkpoint->imap[pinum];
-	if (imap_num == NULL) return -1;
+	if (imap_num == 0) return -1;
 	Inode *inode = get_inode(imap_num, fs);
 	if (inode == NULL) return -1;
 	// For server.c
@@ -168,16 +168,16 @@ int s_mfs_write(int inum, char *buffer, int block, char fname[]){
 // 0 on success, -1 on failure. Failure modes: pinum does not exist, 
 // directory is NOT empty. Note that the name not existing is NOT a failure 
 //by our definition (think about why this might be).
-int s_mfs_unlink(int pinum, char *name){
+int s_mfs_unlink(int pinum, char *name, char fname[]){
 	//TODO
 	printf("server:: mfs_unlink\n");
 	FILE *fs = fopen(fname, "r+");
 	if (fs == NULL) return -1;
 	int imap_num = checkpoint->imap[pinum];
-	if (imap_num == NULL) return -1;
+	if (imap_num == 0) return -1;
 	Inode *inode = get_inode(imap_num, fs);
 	if (inode == NULL) return -1;
-	if (inode == MFS_REGULAR_FILE) {
+	if (inode->type == MFS_REGULAR_FILE) {
 
 	} else if (inode == MFS_DIRECTORY) {
 
