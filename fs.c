@@ -100,13 +100,10 @@ int s_mfs_stat(int inum, int type, int size){
 	Inode *inode = get_inode(imap_num, fs);
 	if (inode == NULL) return -1;
 	// For server.c
-	// MFS_Stat_t *stat = NULL; 
-	// stat->type = inode->type;
-	// stat->size = MFS_BLOCK_SIZE * inode->size; 
+	// m->type = inode->type;
+	// m->size = MFS_BLOCK_SIZE * inode->size; 
 	type = inode->type;
 	size = inode->size;
-	//return stat;
-	// Cannot currently return any information
 	return 0;
 }
 
