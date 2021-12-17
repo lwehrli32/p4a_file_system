@@ -64,12 +64,31 @@ int init_fs(char fname[]){
 */
 int s_mfs_lookup(int pinum, char *name){
 	printf("server:: mfs_lookup\n");
+	FILE *fs = fopen(fname, "r");
+	if (fs == NULL) return -1;
+	int imap_num = checkpoint->imap[pinum];
+	if (imap_num == NULL) return -1;
+	Inode *inode = get_inode(imap_num, fs);
+	if (inode == NULL) return -1;
+	if (inode->type == MFS_DIRECTORY) {
+		for (int i = 0; i < 14; i++) {
+			// Where an inode designated as a directory is made up of
+			// direct pointers to MFS_DirEnt_t objects. If so, check their
+			// names and proceed.
+			MFS_DirEnt_t *tempDir = inode->data_offset[i];
+			if (strcmp(tempDir->name, name)) {
+				return tempDir->inum;
+			}
+			return -1;
+		}
+	} else return -1;
  	return 0;
 }
 
 int s_mfs_stat(int inum, int type, int size){
 	//TODO
 	printf("server:: mfs_stat\n");
+	
 	return 0;
 }
 
@@ -118,6 +137,7 @@ int s_mfs_write(int inum, char *buffer, int block, char fname[]){
 int s_mfs_unlink(int pinum, char *name){
 	//TODO
 	printf("server:: mfs_unlink\n");
+
 	return 0;
 }
 
