@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include "mfs.h"
 
 typedef struct Block{
@@ -14,13 +15,9 @@ typedef struct Inode{
 	int data_offset[14]; // this points to the data Block
 }Inode;
 
-typedef struct Imap{
-	int offset[256]; // this points to the Inode
-}Imap;
-
 typedef struct Checkpoint {
 	int file_size;
-	int imap[256]; // This points to the Imap
+	int imap[256]; // This points to the inodes
 } Checkpoint;
 
 struct Checkpoint *checkpoint;
@@ -28,9 +25,7 @@ void *write_buffer;
 size_t total_size;
 
 Inode * get_inode(int offset, FILE *fs);
-Imap * get_imap(int offset, FILE *fs);
 Block * get_data(int offset, FILE *fs);
-int find_empty_index(Imap *imap);
 
 int init_fs(char fname[]){
     printf("server:: reading file system to memory...\n");
@@ -53,7 +48,7 @@ int init_fs(char fname[]){
 
 	fclose(fs);
 
-	total_size = sizeof(struct Block) + sizeof(struct Imap) + sizeof(struct Inode);
+	total_size = sizeof(struct Block) + sizeof(struct Inode);
 
 	write_buffer = malloc(total_size);
 
@@ -79,20 +74,42 @@ int s_mfs_stat(int inum, int type, int size){
 }
 
 int s_mfs_write(int inum, char *buffer, int block, char fname[]){
-	//TODO
 	printf("server:: mfs_write\n");
-	FILE *fs = fopen(fname, "a");
-	if(fs == NULL){
+	FILE *fs = fopen(fname, "r");
+	if (fs == NULL){
 		return -1;
 	}
-	
-	int end = checkpoint->file_size;
 
-	//buffer = realloc(buffer, 
-	
-	
-	fseek(fs, 0L, SEEK_END);
-	size_t file_size = ftell(fs);
+	int imap_num  = checkpoint->imap[inum];
+	if (imap_num ==0){
+		return -1;
+	}
+
+	Inode *inode = get_inode(imap_num, fs);
+	if(inode == NULL){
+		return -1;
+	}
+
+	if (inode->type == MFS_REGULAR_FILE){
+		// TODO file
+		Block *b = get_data(inode->data_offset[block], fs);
+		strcpy(b->data, buffer);
+		
+		memcpy(write_buffer, (void *)b->data, sizeof(b->data));
+		
+		fclose(fs);
+		fs = fopen(fname, "a");
+		
+		fwrite((char *)write_buffer, sizeof(write_buffer) + 1, 1, fs);
+		
+		write_buffer = NULL;
+
+		// update checkpoint size
+		fseek(fs, 0, SEEK_END);
+		checkpoint->file_size = ftell(fs);
+	}else{
+		return -1;
+	}
 
 	fclose(fs);
 	return 0;
@@ -108,12 +125,19 @@ int s_mfs_read(int inum, char *buffer, int block, char fname[]){
     printf("server:: mfs_read\n");
 	
 	FILE *fs = fopen(fname, "r");
+	if (fs == NULL){
+		return -1;
+	}	
 
 	int imap_num  = checkpoint->imap[inum];
+	if (imap_num ==0){
+		return -1;
+	}
 
-	Imap *imap = get_imap(imap_num, fs);
-
-	Inode *inode = get_inode(imap->offset[inum], fs);
+	Inode *inode = get_inode(imap_num, fs);
+	if(inode == NULL){
+		return -1;
+	}	
 
 	if (inode->type == MFS_REGULAR_FILE){ 
 		// file
@@ -140,23 +164,17 @@ int s_mfs_create(int pinum, int type, char *name, char fname[]){
 	//TODO
 	printf("server:: mfs_create\n");
 	
-	int parent_imap_num = checkpoint->imap[pinum];
+	//int parent_imap_num = checkpoint->imap[pinum];
 
 	FILE *fs = fopen(fname, "r");
+	if (fs == NULL){
+		return -1;
+	}
 
-	Imap *pimap = get_imap(parent_imap_num, fs);
-	
-	int empty_index = find_empty_index(pimap);
-	
-	
-
-	//Inode *pinode = get_inode(pimap>offset, fs);
-	
-	//if (pinode->type != MFS_REGULAR_FILE){
-		//return -1;
-	//}
-
-	
+	Inode new_node;
+	new_node.type = type;
+	new_node.size = 1; 
+	strcpy(new_node.name,name);	
 	
 	fclose(fs);
 
@@ -169,15 +187,6 @@ int s_mfs_shutdown(char fname[]){
 	//fsync();
 	free(write_buffer);
 	return 0;
-}
-
-int find_empty_index(Imap *imap){
-	for (int i = 0; i < 256; i++){
-		if(imap->offset[i] == 0){
-			return 1;
-		}
-	}
-	return -1;
 }
 
 Block * get_data(int offset, FILE *fs){
@@ -195,23 +204,6 @@ Block * get_data(int offset, FILE *fs){
 	Block *b = (Block *)block;
 
 	return b;	
-}
-
-Imap * get_imap(int offset, FILE *fs){
-	size_t imap_size = sizeof(Imap);
-	fseek(fs, offset, SEEK_END);
-
-	char imap[imap_size];
-	int counter = 0;
-	while(counter < imap_size){
-		imap[counter] = getc(fs);
-		counter++;
-		ftell(fs);
-	}
-	
-	Imap *i = (Imap *)imap;
-
-	return i;
 }
 
 Inode * get_inode(int offset, FILE *fs){
@@ -240,6 +232,16 @@ int main(int argc, char *argv[]){
 
 	init_fs(argv[1]);
 
+	FILE *fs = fopen(argv[2], "a");
+	Inode node;
+	strcpy(node.name, "HI");
+	node.size = 14;
+	node.type = 0 ;
+	memcpy(write_buffer, (char *)node, sizeof(Inode));
+	//memcpy(fs, write_buffer, sizeof(write_buffer));
+	fwrite((char *)write_buffer, sizeof(write_buffer) + 1, 1, fs); 
+	fclose(fs);
+	exit(0);
 	if (strcmp(argv[2], "read") == 0){
 		// call read
 	}else if (strcmp(argv[2], "write") == 0){
