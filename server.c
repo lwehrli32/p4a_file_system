@@ -50,30 +50,114 @@ int init_fs(char fname[]){
     printf("server:: reading file system to memory...\n");
     
     FILE *fs;
-    fs = fopen(fname, "w+");
+    fs = fopen(fname, "r");
 
-    imap_size = 1;
-    imap = malloc(imap_size * sizeof(int));
-	if (imap == NULL){
-		fclose(fs);
-		return -1;
-	}
-	
-	inodes = malloc(imap_size * sizeof(struct inode));
-	if (inodes == NULL){
-		fclose(fs);
-		return -1;
-	}
-	
-	// TODO read in existing fs first
-	int readFS = 0;
-	
-	// set checkpoint region. set it to the last inode
-	if (readFS){
-		// TODO set checkpoint of actual fs
-		check_point = 0;
-	}else{
-		check_point = 0;
+	char * line = NULL;
+    size_t len = 0;
+    ssize_t read;
+	int lineNum = 0;
+	int inode_counter = 0;
+	int inode_part = 0;
+	struct inode new_inode;
+
+	printf("server:: printing found results in fs:\n");
+
+	while ((read = getline(&line, &len, fs)) != -1) {
+		if (line){
+			printf("line: %s\n", line);
+			if (lineNum == 0){
+				// populate checkpoint region and imap_size
+				int portion = 0;
+				char *found;
+				while( (found = strsep(&line,",")) != NULL ){
+					if(portion == 0){
+						check_point = atoi(found);
+						printf("checkpoint: %i\n", check_point);
+					}else{
+						imap_size = atoi(found);
+						printf("imap_size: %i\n", imap_size);
+						imap = malloc(imap_size * sizeof(int));
+						if (imap == NULL){
+							fclose(fs);
+							return -1;
+						}
+						
+						inodes = malloc(imap_size * sizeof(struct inode));
+						if (inodes == NULL){
+							fclose(fs);
+							return -1;
+						}
+					}
+					portion++;
+				}
+			}else if (lineNum == 1){
+				// populate imap
+				char *found;
+				int portion = 0;
+				while( (found = strsep(&line,",")) != NULL ){
+					*(imap + portion) = atoi(found);
+					portion++;
+				}
+				for (int i = 0; i < imap_size; i++){
+					printf("%i,", *(imap + i));
+				}
+			}else{
+				// populate inodes
+
+				// signals end of inode data
+				if (strcmp(line, "*&*&*") != 0){
+					if (inode_part == 0){
+						// get size and type of inode
+						char *found;
+						int portion = 0;
+						while( (found = strsep(&line,",")) != NULL ){
+							if (portion == 0){
+								new_inode.size = atoi(found);
+								printf("inode %i size: %i\n", inode_counter, new_inode.size);
+							}else{
+								new_inode.type = atoi(found);
+								printf("inode %i type: %i\n", inode_counter, new_inode.type);
+							}
+							portion++;
+						}
+					}else{
+						strcpy(new_inode.data[inode_part - 1]->data, line);
+						printf("inode %i data: %s\n", inode_counter, new_inode.data[inode_part - 1]->data);
+					}
+					inode_part++;
+				}else{
+					*(inodes + inode_counter) = new_inode;
+					inode_counter++;
+					inode_part = 0;
+				}
+			}
+		}else{
+			break;
+		}
+		lineNum++;
+    }
+
+	printf("after load\n");
+	*(inodes + inode_counter) = new_inode;
+
+	if (line)
+		free(line);
+
+	// nothing was found in the fs
+	if (lineNum == 0){
+		printf("Nothing found in fs\n");
+		imap_size = 1;
+		imap = malloc(imap_size * sizeof(int));
+		if (imap == NULL){
+			fclose(fs);
+			return -1;
+		}
+		
+		inodes = malloc(imap_size * sizeof(struct inode));
+		if (inodes == NULL){
+			fclose(fs);
+			return -1;
+		}
 	}
 	
 	fclose(fs);
@@ -216,7 +300,7 @@ int s_mfs_shutdown(char fname[]){
 	printf("server:: mfs_shutdown\n");
 	
 	FILE *fs;
-    fs = fopen(fname, "w+");
+    fs = fopen(fname, "w");
 	
 	// print checkpoint region
 	fprintf(fs, "%i,%i\n", check_point, imap_size);
@@ -237,19 +321,18 @@ int s_mfs_shutdown(char fname[]){
 		printf("server:: getting inode %i\n", i);
 		struct inode node = *(inodes + i);
 		fprintf(fs, "%i,", node.size);
-		fprintf(fs, "%i,", node.type);
+		fprintf(fs, "%i\n", node.type);
 
 		for(int jj = 0; jj < 14; jj++){
 			if (node.data[i] != NULL){
-				fprintf(fs, "%s,", node.data[i]->data);
+				fprintf(fs, "%s", node.data[i]->data);
 			}else{
 				break;
 			}
+			fprintf(fs, "\n");
 		}
-		fprintf(fs, "*&*&*");
+		fprintf(fs, "*&*&*\n");
 	}
-	
-	fprintf(fs, "\n");
 	
 	fclose(fs);
 	free(inodes);
