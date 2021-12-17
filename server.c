@@ -15,7 +15,7 @@ typedef struct inode{
 
 struct directory {
 	char *name; // not sure, for unlink
-}
+} directory;
 
 
 int *imap;
@@ -47,6 +47,7 @@ int add_inode_imap(){
 }
 
 int init_fs(char fname[]){
+	return -1;
     printf("server:: reading file system to memory...\n");
     
     FILE *fs;
@@ -173,171 +174,34 @@ int init_fs(char fname[]){
 *
 */
 int s_mfs_lookup(int pinum, char *name){
-	printf("server:: mfs_lookup\n");
-	int inode = *(pinum + imap);
-	struct inode node = *(inode + inodes);
-	if (node.type == MFS_DIRECTORY) {
-		
-	} else {
-		return -1;
-	}
- 	return 0;
+	return -1;
 }
 
 int s_mfs_stat(int inum, int type, int size){
-	//TODO
-	printf("server:: mfs_stat\n");
-	//int inode = *(imap + inum);
-	//struct inode node = *(inodes + inode);
-	//if (node.type == MFS_DIRECTORY) {
-		
-	//} else if (node.type == MFS_REGULAR_FILE) {
-		// wait for piazza
-	//}
-	return 0;
+	return -1;
 }
 
 int s_mfs_write(int inum, char *buffer, int block){
-	//TODO
-	printf("server:: mfs_write\n");
-	
-	// look at imap using checkpoint
-	int inode = *(imap + check_point);
-	
-	// look at inode
-	struct inode node = *(inodes + inode);
-	
-	// look at the data
-	if (node.type == MFS_DIRECTORY){
-		return -1;
-	}
-
-	if (block > 16 || block < 2)
-		return -1;
-
-	node.data[block - 2]->data = buffer;
-
-	return 0;
+	return -1;
 }
 
 int s_mfs_unlink(int pinum, char *name){
-	//TODO
-	printf("server:: mfs_unlink\n");
-	int inode = *(imap + pinum);
-	struct inode node = *(inode + inode);
-	if (node.type == MFS_DIRECTORY) {
-		
-	} else {
-		return -1;
-	}
-	return 0;
+	return -1;
 }
 
 int s_mfs_read(int inum, char *buffer, int block){
 	//TODO
-    printf("server:: mfs_read\n");
-
-	// get inode index from imap using checkpoint region
-	int inode = *(imap + inum);
-	
-	// get inode
-	struct inode node = *(inodes + inode);
-
-	if (node.type == 0){
-		// directory
-
-		MFS_DirEnt_t *dir = malloc(sizeof(MFS_DirEnt_t));
-		if (dir == NULL){
-			return -1;
-		}
-
-		// TODO get dir name
-		strcpy(dir->name, "dir_name");
-		dir->inum = inum;
-
-		// get data
-		strcpy(buffer, (char *)dir);
-
-		free(dir);
-	}else{
-		// file
-		
-		// get data
-		strcpy(buffer, node.data[block]->data);
-	} 
-	
-	return 0;
+	return -1;
 }
 
 int s_mfs_create(int pinum, int type, char *name){
 	//TODO
-	printf("server:: mfs_create\n");
-	
-	if(add_inode_imap() < 0){
-		return -1;
-	}
-
-	// create new inode number
-	struct inode *new_inode = malloc(sizeof(struct inode));
-	if (new_inode == NULL){
-		return -1;
-	}
-
-	new_inode->type = type;
-
-	// get inode index from imap using checkpoint region
-	//int pinode = *(imap + pinum);
-	
-	
-
-	// update checkpoint region
-	
-	return 0;
+	return -1;
 }
 
 int s_mfs_shutdown(char fname[]){
 	//TODO: force everything to the fs and exit	
-	printf("server:: mfs_shutdown\n");
-	
-	FILE *fs;
-    fs = fopen(fname, "w");
-	
-	// print checkpoint region
-	fprintf(fs, "%i,%i\n", check_point, imap_size);
-	
-	// print imap
-	for(int i = 0; i < imap_size; i++){
-		if (i == imap_size - 1){
-			fprintf(fs, "%i", *(imap + i));
-		}else{
-			fprintf(fs, "%i,", *(imap + i));
-		}
-	}
-	
-	fprintf(fs, "\n");
-	
-	// print inodes
-	for (int i = 0; i < imap_size; i++){
-		printf("server:: getting inode %i\n", i);
-		struct inode node = *(inodes + i);
-		fprintf(fs, "%i,", node.size);
-		fprintf(fs, "%i\n", node.type);
-
-		for(int jj = 0; jj < 14; jj++){
-			if (node.data[i] != NULL){
-				fprintf(fs, "%s", node.data[i]->data);
-			}else{
-				break;
-			}
-			fprintf(fs, "\n");
-		}
-		fprintf(fs, "*&*&*\n");
-	}
-	
-	fclose(fs);
-	free(inodes);
-	free(imap);
-	return 0;
+	return -1;
 }
 
 int main(int argc, char *argv[]) {
