@@ -18,5 +18,8 @@ all: libmfs.c udp.c client.c server.c
 	${CC} -o client client.c -Wall -Werror -L. -lmfs
 	${CC} -o server server.c udp.c -Wall -Werror
 
+fs: fs.c
+	${CC} -o fs fs.c -Wall -Werror
+
 clean:
 	rm -f server.o client.o libmfs.so libmfs.o udp.o client server
