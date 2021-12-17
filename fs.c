@@ -8,19 +8,19 @@ typedef struct Block{
 }Block;
 
 typedef struct Inode{
-	char name[26];
+	char name[28];
 	int size; // number of last byte in file
 	int type; // file or dir
-	int *data_offset[14]; // point to data
+	int data_offset[14]; // this points to the data Block
 }Inode;
 
 typedef struct Imap{
-	int offset[256];
+	int offset[256]; // this points to the Inode
 }Imap;
 
 typedef struct Checkpoint {
 	int file_size;
-	int imap[256];
+	int imap[256]; // This points to the Imap
 } Checkpoint;
 
 struct Checkpoint *checkpoint;
@@ -29,6 +29,7 @@ size_t total_size;
 
 Inode * get_inode(int offset, FILE *fs);
 Imap * get_imap(int offset, FILE *fs);
+Block * get_data(int offset, FILE *fs);
 int find_empty_index(Imap *imap);
 
 int init_fs(char fname[]){
@@ -104,7 +105,6 @@ int s_mfs_unlink(int pinum, char *name){
 }
 
 int s_mfs_read(int inum, char *buffer, int block, char fname[]){
-	//TODO
     printf("server:: mfs_read\n");
 	
 	FILE *fs = fopen(fname, "r");
@@ -117,8 +117,18 @@ int s_mfs_read(int inum, char *buffer, int block, char fname[]){
 
 	if (inode->type == MFS_REGULAR_FILE){ 
 		// file
+		Block *b = get_data(inode->data_offset[block], fs);
+		if(b->data != NULL){
+			strcat(buffer, b->data);
+		}else{
+			return -1;
+		}
 	}else{
 		// dir
+		MFS_DirEnt_t dir;
+		strcpy(dir.name, inode->name);
+		dir.inum = inum;	
+		strcat(buffer, (char *)&dir);
 	}
 
 	fclose(fs);
@@ -168,6 +178,23 @@ int find_empty_index(Imap *imap){
 		}
 	}
 	return -1;
+}
+
+Block * get_data(int offset, FILE *fs){
+	size_t block_size = sizeof(Block);
+	fseek(fs, offset, SEEK_END);
+
+	char block[block_size];
+	int counter = 0;
+	while(counter < block_size){
+		block[counter] = getc(fs);
+		counter++;
+		ftell(fs);
+	}
+
+	Block *b = (Block *)block;
+
+	return b;	
 }
 
 Imap * get_imap(int offset, FILE *fs){
