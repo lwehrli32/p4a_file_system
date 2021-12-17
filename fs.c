@@ -58,15 +58,15 @@ int init_fs(char fname[]){
 		dir.inum = 1;
 		inode.data_offset[1] = 2 * sizeof(MFS_BLOCK_SIZE);
 		
-		fwrite(checkpoint, sizeof(MFS_BLOCK_SIZE), 1, fs);
-		fwrite(inode, sizeof(MFS_BLOCK_SIZE), 1, fs);
-		fwrite(pdir, sizeof(MFS_BLOCK_SIZE), 1, fs);
-		fwrite(dir, sizeof(MFS_BLOCK_SIZE), 1, fs);
+		fwrite(&checkpoint, sizeof(MFS_BLOCK_SIZE), 1, fs);
+		fwrite(&inode, sizeof(MFS_BLOCK_SIZE), 1, fs);
+		fwrite(&pdir, sizeof(MFS_BLOCK_SIZE), 1, fs);
+		fwrite(&dir, sizeof(MFS_BLOCK_SIZE), 1, fs);
 		
 		fclose(fs);
 	}else{
 		//existing fs
-		size_t checkpoint_size = sizeof(MFS_BLOCK_SIZE);
+		int checkpoint_size = sizeof(MFS_BLOCK_SIZE);
 		int count = 0;
 		char ch;
 		char checkBuffer[checkpoint_size];
@@ -106,10 +106,11 @@ int s_mfs_lookup(int pinum, char *name, char fname[]){
 			// Where an inode designated as a directory is made up of
 			// direct pointers to MFS_DirEnt_t objects. If so, check their
 			// names and proceed.
-			MFS_DirEnt_t *tempDir = inode->data_offset[i];
+			/*MFS_DirEnt_t *tempDir = inode->data_offset[i];
 			if (strcmp(tempDir->name, name)) {
 				return tempDir->inum;
 			}
+			*/
 			return -1;
 		}
 	} else return -1;
@@ -244,13 +245,13 @@ int s_mfs_create(int pinum, int type, char *name, char fname[]){
 		return -1;
 	}
 	
-	int parent_inode = checkpoint->imap[pinum];
-	Inode *pinode = get_inode(parent_inode, fs);
+	//int parent_inode = checkpoint->imap[pinum];
+	//Inode *pinode = get_inode(parent_inode, fs);
 	
-	int offset = get_empty_offset(pinode);
+	//int offset = get_empty_offset(pinode);
 
-	Inode new_node;
-	new_node.type = type;
+	//Inode new_node;
+	//new_node.type = type;
 	
 	// TODO get size
 	//new_node.size = ;
@@ -266,8 +267,8 @@ int s_mfs_create(int pinum, int type, char *name, char fname[]){
 		
 		for(int i = 2; i < 14; i++){
 			MFS_DirEnt_t empty_dir;
-			strcpy(dir.name, "");
-			dir.inum = -1;
+			strcpy(empty_dir.name, "");
+			empty_dir.inum = -1;
 		}
 		
 	}else{
@@ -285,6 +286,7 @@ int get_empty_offset_imap(){
 			return i;
 		}
 	}
+	return -1;
 }
 
 int get_empty_offset(Inode *inode){
@@ -352,7 +354,7 @@ int main(int argc, char *argv[]){
 	strcpy(node.name, "HI");
 	node.size = 14;
 	node.type = 0 ;
-	memcpy(write_buffer, (char *)node, sizeof(Inode));
+	//memcpy(write_buffer, (char *)node, sizeof(Inode));
 	//memcpy(fs, write_buffer, sizeof(write_buffer));
 	fwrite((char *)write_buffer, sizeof(write_buffer) + 1, 1, fs); 
 	fclose(fs);
