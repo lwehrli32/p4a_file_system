@@ -26,31 +26,47 @@ size_t total_size;
 
 Inode * get_inode(int offset, FILE *fs);
 Block * get_data(int offset, FILE *fs);
+int get_empty_offset(Inode *inode);
+int get_empty_offset_imap();
 
 int init_fs(char fname[]){
     printf("server:: reading file system to memory...\n");
     
-    FILE *fs;
-    fs = fopen(fname, "r");
+    FILE *fs = fopen(fname, "r");
 	if (fs == NULL){
-		return -1;
+		fs = fopen(fname, "w");
+		MFS_DirEnt_t pdir;
+		strcpy(pdir.name, "..");
+		pdir.inum = pinum;
+		
+		
+		write(fs, &checkpoint, sizeof(Checkpoint));
+		write(fs, &pdir, sizeof(MFS_DirEnt_t));
+		
+		MFS_DirEnt_t dir;
+		strcpy(dir.name, ".");
+		dir.inum = get_empty_offset_imap();
+		write(fs, &dir, sizeof(MFS_DirEnt_t));
+		
+		fclose(fs);
+	}else{
+		//existing fs
+		size_t checkpoint_size = sizeof(struct Checkpoint);
+		int count = 0;
+		char ch;
+		char checkBuffer[checkpoint_size];
+		while( ( ch = fgetc(fs) ) != EOF || count < checkpoint_size){
+			checkBuffer[count++] = ch;
+		}
+
+		checkpoint = (struct Checkpoint*) checkBuffer;
+
+		fclose(fs);
+
+		total_size = sizeof(struct Block) + sizeof(struct Inode);
+
+		write_buffer = malloc(total_size);
 	}
-	
-	size_t checkpoint_size = sizeof(struct Checkpoint);
-	int count = 0;
-	char ch;
-	char checkBuffer[checkpoint_size];
-	while( ( ch = fgetc(fs) ) != EOF || count < checkpoint_size){
-		checkBuffer[count++] = ch;
-	}
-
-	checkpoint = (struct Checkpoint*) checkBuffer;
-
-	fclose(fs);
-
-	total_size = sizeof(struct Block) + sizeof(struct Inode);
-
-	write_buffer = malloc(total_size);
 
     return 0;
 }
@@ -62,7 +78,7 @@ int init_fs(char fname[]){
 *	Failure modes: invalid pinum, name does not exist in pinum.
 *
 */
-int s_mfs_lookup(int pinum, char *name){
+int s_mfs_lookup(int pinum, char *name, char fname[]){
 	printf("server:: mfs_lookup\n");
 	FILE *fs = fopen(fname, "r");
 	if (fs == NULL) return -1;
@@ -171,16 +187,12 @@ int s_mfs_unlink(int pinum, char *name){
 
 int s_mfs_read(int inum, char *buffer, int block, char fname[]){
     printf("server:: mfs_read\n");
-	s
+    
 	FILE *fs = fopen(fname, "r");
-	if (fs == NULL){
-		return -1;
-	}	
+	if (fs == NULL) return -1;	
 
 	int imap_num  = checkpoint->imap[inum];
-	if (imap_num ==0){
-		return -1;
-	}
+	if (imap_num ==0) return -1;
 
 	Inode *inode = get_inode(imap_num, fs);
 	if(inode == NULL){
@@ -211,22 +223,62 @@ int s_mfs_read(int inum, char *buffer, int block, char fname[]){
 int s_mfs_create(int pinum, int type, char *name, char fname[]){
 	//TODO
 	printf("server:: mfs_create\n");
-	
-	//int parent_imap_num = checkpoint->imap[pinum];
 
 	FILE *fs = fopen(fname, "r");
 	if (fs == NULL){
 		return -1;
 	}
+	
+	int parent_inode = checkpoint->imap[pinum];
+	Inode *pinode = get_inode(parent_inode, fs);
+	
+	int offset = get_empty_offset(pinode);
 
 	Inode new_node;
 	new_node.type = type;
-	new_node.size = 1; 
-	strcpy(new_node.name,name);	
+	
+	// TODO get size
+	//new_node.size = ;
+	
+	if(type == MFS_DIRECTORY){
+		MFS_DirEnt_t pdir;
+		strcpy(pdir.name, "..");
+		pdir.inum = pinum;
+		
+		MFS_DirEnt_t dir;
+		strcpy(dir.name, ".");
+		dir.inum = get_empty_offset_imap();
+		
+		for(int i = 2; i < 14; i++){
+			MFS_DirEnt_t empty_dir;
+			strcpy(dir.name, "");
+			dir.inum = -1;
+		}
+		
+	}else{
+	
+	}
 	
 	fclose(fs);
 
 	return 0;
+}
+
+int get_empty_offset_imap(){
+	for(int i = 0; i < 256; i++){
+		if(checkpoint->imap[i] == 0){
+			return i;
+		}
+	}
+}
+
+int get_empty_offset(Inode *inode){
+	for(int i = 0; i < 14; i++){
+		if (inode->data_offset[i] == 0)){
+			return i;
+		}
+	}
+	return -1;
 }
 
 int s_mfs_shutdown(char fname[]){
@@ -279,7 +331,7 @@ int main(int argc, char *argv[]){
 	}
 
 	init_fs(argv[1]);
-
+	exit(0);
 	FILE *fs = fopen(argv[2], "a");
 	Inode node;
 	strcpy(node.name, "HI");
