@@ -39,12 +39,11 @@ int init_fs(char fname[]){
 		Inode inode;
 		inode.type = MFS_DIRECTORY;
 		
-		checkpoint = malloc(sizeof(Checkpoint));
+		checkpoint = malloc(sizeof(MFS_BLOCK_SIZE));
 		if (checkpoint == NULL) return -1;
 		
 		// first inode
-		 nn 
-		
+		checkpoint->imap[0] = sizeof(MFS_BLOCK_SIZE);
 		
 		MFS_DirEnt_t pdir;
 		strcpy(pdir.name, "..");
@@ -59,15 +58,15 @@ int init_fs(char fname[]){
 		dir.inum = 1;
 		inode.data_offset[1] = 2 * sizeof(MFS_BLOCK_SIZE);
 		
-		write(fs, &checkpoint, sizeof(MFS_BLOCK_SIZE));
-		write(fs, &inode, sizeof(MFS_BLOCK_SIZE));
-		write(fs, &pdir, sizeof(MFS_BLOCK_SIZE));
-		write(fs, &dir, sizeof(MFS_BLOCK_SIZE));
+		fwrite(checkpoint, sizeof(MFS_BLOCK_SIZE), 1, fs);
+		fwrite(inode, sizeof(MFS_BLOCK_SIZE), 1, fs);
+		fwrite(pdir, sizeof(MFS_BLOCK_SIZE), 1, fs);
+		fwrite(dir, sizeof(MFS_BLOCK_SIZE), 1, fs);
 		
 		fclose(fs);
 	}else{
 		//existing fs
-		size_t checkpoint_size = sizeof(struct Checkpoint);
+		size_t checkpoint_size = sizeof(MFS_BLOCK_SIZE);
 		int count = 0;
 		char ch;
 		char checkBuffer[checkpoint_size];
@@ -79,7 +78,7 @@ int init_fs(char fname[]){
 
 		fclose(fs);
 
-		total_size = sizeof(struct Block) + sizeof(struct Inode);
+		total_size = sizeof(MFS_BLOCK_SIZE) + sizeof(MFS_BLOCK_SIZE);
 
 		write_buffer = malloc(total_size);
 	}
@@ -99,7 +98,7 @@ int s_mfs_lookup(int pinum, char *name, char fname[]){
 	FILE *fs = fopen(fname, "r");
 	if (fs == NULL) return -1;
 	int imap_num = checkpoint->imap[pinum];
-	if (imap_num == NULL) return -1;
+	if (imap_num == 0) return -1;
 	Inode *inode = get_inode(imap_num, fs);
 	if (inode == NULL) return -1;
 	if (inode->type == MFS_DIRECTORY) {
@@ -127,7 +126,7 @@ int s_mfs_stat(int inum, int type, int size, char fname[]){
 	printf("server:: mfs_stat\n");
 	FILE *fs = fopen(fname, "r");
 	if (fs == NULL) return -1;
-	int imap_num = checkpoint->imap[pinum];
+	int imap_num = checkpoint->imap[i];
 	if (imap_num == 0) return -1;
 	Inode *inode = get_inode(imap_num, fs);
 	if (inode == NULL) return -1;
